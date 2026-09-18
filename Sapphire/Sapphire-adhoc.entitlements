@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Entitlements para compilaciones con firma ad-hoc (sin cuenta de
+	  desarrollador).
+
+	  Los del fichero normal (Sapphire.entitlements) impiden que la app
+	  arranque cuando no hay un perfil de aprovisionamiento de Apple detrás:
+
+	    · com.apple.developer.system-extension.install es un entitlement
+	      RESTRINGIDO. Sin perfil que lo autorice, macOS se niega a lanzar la
+	      app, con el mensaje "La aplicación no se puede abrir".
+
+	    · Los grupos usan $(TeamIdentifierPrefix) y $(AppIdentifierPrefix), que
+	      con DEVELOPMENT_TEAM vacío se expanden a nada y dejan los valores
+	      malformados.
+
+	  Este fichero va vacío a propósito. Consecuencia real: esta compilación NO
+	  puede instalar extensiones de sistema (cámara virtual, driver de audio) ni
+	  compartir llavero o grupos de app. El resto de la aplicación funciona.
+
+	  Para tenerlo todo, compila con tu propio equipo:
+	      ./scripts-personal/construir-app.sh TU_TEAM_ID
+	  que usa Sapphire.entitlements, el completo.
+	-->
+</dict>
+</plist>

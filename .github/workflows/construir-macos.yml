@@ -88,6 +88,7 @@ jobs:
             DEVELOPMENT_TEAM="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             ENABLE_HARDENED_RUNTIME=NO \
+            CODE_SIGN_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements \
             ONLY_ACTIVE_ARCH=NO \
             $EXTRA \
             build 2>&1 | tee build.log
@@ -118,19 +119,19 @@ jobs:
           security find-identity -v -p codesigning "$KEYCHAIN"
 
       - name: Empaquetar .dmg
-        run: ./scripts-personal/crear-dmg.sh build/Build/Products/Release/Sapphire.app
+        run: ./scripts-personal/crear-dmg.sh build/Build/Products/Release/Iris.app
 
       - name: Subir .app
         uses: actions/upload-artifact@v4
         with:
-          name: Sapphire-app
-          path: build/Build/Products/Release/Sapphire.app
+          name: Iris-app
+          path: build/Build/Products/Release/Iris.app
           if-no-files-found: error
 
       - name: Subir .dmg
         uses: actions/upload-artifact@v4
         with:
-          name: Sapphire-dmg
+          name: Iris-dmg
           path: dist/*.dmg
           if-no-files-found: error
 

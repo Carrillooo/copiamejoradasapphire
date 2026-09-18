@@ -1,9 +1,13 @@
-# Sapphire Personal
+# Iris
 
 Versión personal y corregida de [Sapphire](https://github.com/cshariq/Sapphire),
 la app para el notch del Mac. App nativa de macOS (Swift / SwiftUI / AppKit).
 
 **Objetivo de despliegue:** macOS 26.0, Apple Silicon.
+
+> Antes se llamaba «Sapphire Personal»; se renombró a **Iris** para no confundirla
+con la original ni chocar con ella si tienes las dos instaladas (identificador
+`com.carrillo.iris`, esquema `iris://`, icono propio).
 
 > Obra derivada bajo **GNU AGPL v3.0**, a partir del commit `798d117` de upstream.
 > El README original está en [`README-UPSTREAM.md`](README-UPSTREAM.md) y las

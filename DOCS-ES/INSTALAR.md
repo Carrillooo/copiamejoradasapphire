@@ -1,4 +1,4 @@
-# Instalar Sapphire Personal en tu Mac
+# Instalar Iris en tu Mac
 
 ## Por qué macOS avisa (y cuándo no avisa)
 
@@ -19,6 +19,19 @@ Tres escenarios, de menos a más fricción:
 
 ---
 
+## Qué deja fuera la compilación ad-hoc
+
+Los entitlements originales incluyen
+`com.apple.developer.system-extension.install`, que es **restringido**: sin un
+perfil de aprovisionamiento de Apple detrás, macOS **se niega a lanzar la app**
+(el mensaje «La aplicación no se puede abrir»). Por eso la compilación ad-hoc usa
+`Sapphire-adhoc.entitlements`, que va vacío.
+
+Consecuencia real, dicha claramente: esa compilación **no puede instalar
+extensiones de sistema** (cámara virtual, driver de audio) ni usar grupos de app
+o llavero compartido. El resto de la aplicación funciona. Compilando con tu
+propio equipo (camino B) se usan los entitlements completos.
+
 ## Camino A — descargar el .dmg ya compilado
 
 No necesitas Xcode. GitHub compila la app y deja el `.dmg` listo.
@@ -26,12 +39,12 @@ No necesitas Xcode. GitHub compila la app y deja el `.dmg` listo.
 1. Pestaña **Actions** del repositorio.
 2. Abre la última ejecución de **«Construir app de macOS»**.
 3. Descarga el artefacto **`Sapphire-dmg`** y descomprímelo.
-4. Abre el `.dmg` y **arrastra Sapphire a la carpeta Aplicaciones**, como
+4. Abre el `.dmg` y **arrastra Iris a la carpeta Aplicaciones**, como
    cualquier app.
 5. La primera vez que la abras, macOS dirá que no puede comprobarla. **Sin
    tocar el Terminal:**
    - Ve a  → *Ajustes del Sistema* → *Privacidad y seguridad*.
-   - Baja hasta abajo: verás «Se ha bloqueado el uso de "Sapphire"…».
+   - Baja hasta abajo: verás «Se ha bloqueado el uso de "Iris"…».
    - Pulsa **«Abrir de todos modos»** y confirma.
 
    Sólo hay que hacerlo una vez por versión.
@@ -39,7 +52,7 @@ No necesitas Xcode. GitHub compila la app y deja el `.dmg` listo.
 Si prefieres el Terminal, una línea hace lo mismo:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/Sapphire.app
+xattr -dr com.apple.quarantine /Applications/Iris.app
 ```
 
 > **La pega del camino A:** la firma ad-hoc cambia en cada compilación, así que
@@ -79,8 +92,8 @@ security find-identity -v -p codesigning
 
 ```bash
 ./scripts-personal/construir-app.sh TU_TEAM_ID
-cp -R build/Build/Products/Release/Sapphire.app /Applications/
-open /Applications/Sapphire.app
+cp -R build/Build/Products/Release/Iris.app /Applications/
+open /Applications/Iris.app
 ```
 
 El proyecto viene con `DEVELOPMENT_TEAM = KVQFWJ7C7S`, el equipo del autor
@@ -121,6 +134,13 @@ AC_APPLE_ID="tu@correo.com" AC_TEAM_ID="TEAMID" AC_PASSWORD="xxxx-xxxx-xxxx-xxxx
 ```
 
 ---
+
+## Spotify y Tidal
+
+La URI de redirección de OAuth es ahora **`iris://callback`** (antes
+`sapphire://callback`). Es la que hay que registrar en developer.spotify.com o
+developer.tidal.com. Se cambió junto con el nombre para no competir por el
+esquema `sapphire://` con la app original.
 
 ## Permisos
 

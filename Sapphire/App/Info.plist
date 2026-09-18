@@ -81,10 +81,10 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.cshariq.sapphire</string>
+			<string>com.carrillo.iris</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>sapphire</string>
+				<string>iris</string>
 			</array>
 		</dict>
 	</array>

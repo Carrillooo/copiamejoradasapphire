@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Empaqueta Sapphire.app en un .dmg con la ventana de instalación clásica:
+# Empaqueta Iris.app en un .dmg con la ventana de instalación clásica:
 # el icono de la app a la izquierda, Aplicaciones a la derecha, y arrastras.
 #
-#   ./scripts-personal/crear-dmg.sh [ruta/a/Sapphire.app]
+#   ./scripts-personal/crear-dmg.sh [ruta/a/Iris.app]
 #
 # Firma y notarización (opcional). Si defines estas variables, el .dmg sale
 # firmado con Developer ID y notarizado por Apple, y entonces se instala como
@@ -18,7 +18,7 @@
 # pero macOS avisará la primera vez (ver DOCS-ES/INSTALAR.md).
 set -euo pipefail
 
-APP="${1:-build/Build/Products/Release/Sapphire.app}"
+APP="${1:-build/Build/Products/Release/Iris.app}"
 
 if [ "$(uname)" != "Darwin" ]; then
   echo "Esto sólo funciona en macOS: hdiutil no existe en otros sistemas." >&2
@@ -30,8 +30,8 @@ if [ ! -d "$APP" ]; then
   exit 1
 fi
 
-VOL="Sapphire Personal"
-NAME="SapphirePersonal-$(date +%Y%m%d)"
+VOL="Iris"
+NAME="Iris-$(date +%Y%m%d)"
 DIST="dist"
 STAGE="$(mktemp -d)"
 RW="$(mktemp -u).dmg"
@@ -86,7 +86,7 @@ tell application "Finder"
     set theViewOptions to the icon view options of container window
     set arrangement of theViewOptions to not arranged
     set icon size of theViewOptions to 128
-    set position of item "Sapphire.app" of container window to {150, 190}
+    set position of item "Iris.app" of container window to {150, 190}
     set position of item "Applications" of container window to {450, 190}
     close
     open

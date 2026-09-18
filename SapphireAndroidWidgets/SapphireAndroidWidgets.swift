@@ -119,7 +119,7 @@ struct AndroidWidgetEntryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .containerBackground(.fill.tertiary, for: .widget)
-        .widgetURL(URL(string: "sapphire://android-widgets"))
+        .widgetURL(URL(string: "iris://android-widgets"))
     }
 }
 

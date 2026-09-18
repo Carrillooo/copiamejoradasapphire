@@ -23,7 +23,7 @@ class SpotifyOfficialAPIManager: ObservableObject {
     private var accessTokenExpiresAt: Date?
     private var clientId = ""
     private var clientSecret = ""
-    private let redirectURI = "sapphire://callback"
+    private let redirectURI = "iris://callback"
 
     private var refreshTask: Task<Bool, Never>?
 

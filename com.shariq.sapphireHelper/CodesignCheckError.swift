@@ -14,7 +14,7 @@ enum CodesignCheckError: Error {
 }
 
 struct CodesignCheck {
-    private static let sapphireSigningIdentifier = "com.cshariq.sapphire"
+    private static let sapphireSigningIdentifier = "com.carrillo.iris"
     private static let helperSigningIdentifier = "com.shariq.sapphireHelper"
 
     private static let adHocSignatureFlag: UInt32 = 0x0002

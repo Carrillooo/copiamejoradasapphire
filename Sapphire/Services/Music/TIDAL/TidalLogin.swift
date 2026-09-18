@@ -83,7 +83,7 @@ private struct TidalLoginWebViewRepresentable: NSViewRepresentable {
             decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
         ) {
             if let url = navigationAction.request.url,
-               url.scheme?.lowercased() == "sapphire",
+               url.scheme?.lowercased() == "iris",
                url.host?.lowercased() == "callback" {
                 if !isCompleting {
                     isCompleting = true

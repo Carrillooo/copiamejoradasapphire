@@ -8940,7 +8940,7 @@ struct MusicSettingsView: View {
                     Text("Spotify (Official API)").font(.headline).padding([.horizontal, .top])
 VStack(alignment: .leading, spacing: 8) {
                         Text("Spotify API Credentials").font(.system(size: 14, weight: .medium))
-                        Text("Register your app at developer.spotify.com and copy these values here. The redirect URI is: sapphire://callback").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
+                        Text("Registra tu app en developer.spotify.com y copia aquí estos valores. La URI de redirección es: iris://callback").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
                         Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8))
                         SecureField("Enter your Client ID", text: Binding(
                             get: { APIKeyManager.shared.spotifyClientId },
@@ -8973,7 +8973,7 @@ VStack(alignment: .leading, spacing: 8) {
                     Text("TIDAL").font(.headline).padding([.horizontal, .top])
                     VStack(alignment: .leading, spacing: 8) {
                         Text("TIDAL API Credentials").font(.system(size: 14, weight: .medium))
-                        Text("Create an app at developer.tidal.com, enable the user.read, search.read, collection.read/write, and playlists.read/write scopes, and set the redirect URI exactly to sapphire://callback.").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
+                        Text("Crea una app en developer.tidal.com, habilita los permisos user.read, search.read, collection.read/write y playlists.read/write, y pon la URI de redirección exactamente como iris://callback.").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
                         Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8))
                         SecureField("Enter your Client ID", text: Binding(
                             get: { APIKeyManager.shared.tidalClientId },

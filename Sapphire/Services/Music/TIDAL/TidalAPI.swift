@@ -170,7 +170,7 @@ class TidalAPIManager: ObservableObject {
     private var accessTokenExpiresAt: Date?
     private var clientId = ""
     private var clientSecret = ""
-    private let redirectURI = "sapphire://callback"
+    private let redirectURI = "iris://callback"
     private let baseURL = "https://openapi.tidal.com/v2"
     private let tokenURL = "https://auth.tidal.com/v1/oauth2/token"
     private let authorizeURL = "https://login.tidal.com/authorize"

@@ -1213,7 +1213,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
         guard
             let urlString = event.paramDescriptor(forKeyword: AEKeyword(keyDirectObject))?.stringValue,
             let url = URL(string: urlString),
-            url.scheme == "sapphire"
+            url.scheme == "iris"
         else { return }
         if url.host == "android-widgets" {
             continuityManager.openWidgets()

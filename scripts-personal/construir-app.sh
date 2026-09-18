@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Compila Sapphire Personal y deja Sapphire.app en build/Build/Products/Release/.
+# Compila Iris y deja Iris.app en build/Build/Products/Release/.
 #
 #   ./scripts-personal/construir-app.sh              # firma ad-hoc, sin Apple ID
 #   ./scripts-personal/construir-app.sh TEAMID       # firma con tu equipo
@@ -45,12 +45,16 @@ if [ -n "$TEAM" ]; then
 else
   echo "=== Compilando ($CONFIG) con firma ad-hoc ==="
   echo "    (en Apple Silicon una app sin firma no arranca; ad-hoc es el mínimo)"
+  # Entitlements reducidos: los normales llevan
+  # com.apple.developer.system-extension.install, un entitlement restringido
+  # que sin perfil de Apple impide que macOS lance la app.
   SIGN_ARGS=(
     CODE_SIGN_IDENTITY="-"
     CODE_SIGN_STYLE=Manual
     DEVELOPMENT_TEAM=""
     PROVISIONING_PROFILE_SPECIFIER=""
     ENABLE_HARDENED_RUNTIME=NO
+    CODE_SIGN_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements
   )
 fi
 echo
@@ -73,7 +77,7 @@ xcodebuild \
     exit 1
   }
 
-APP="build/Build/Products/$CONFIG/Sapphire.app"
+APP="build/Build/Products/$CONFIG/Iris.app"
 echo
 echo "Listo: $APP"
 echo "Para abrirla:        open \"$APP\""
