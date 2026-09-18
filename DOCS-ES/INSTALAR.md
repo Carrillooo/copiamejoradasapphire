@@ -1,38 +1,59 @@
 # Instalar Sapphire Personal en tu Mac
 
-Hay dos caminos. El segundo es mejor para uso diario.
+## Por qué macOS avisa (y cuándo no avisa)
+
+Para que un `.dmg` descargado se instale sin un solo aviso, la app tiene que ir
+firmada con un **Developer ID** y **notarizada por Apple**. Eso exige la cuenta
+de desarrollador de pago (99 €/año). Un Apple ID gratuito no vale: sus
+certificados son de desarrollo, caducan a los 7 días y no permiten notarizar.
+
+Esa es una regla de Gatekeeper, no una carencia de este proyecto.
+
+Tres escenarios, de menos a más fricción:
+
+| Cómo la obtienes | Avisos de macOS |
+|---|---|
+| La compilas tú en tu Mac (camino B) | **Ninguno.** La cuarentena sólo se aplica a lo descargado |
+| `.dmg` descargado, firma ad-hoc (camino A) | Un aviso la primera vez. Se resuelve en Ajustes, sin Terminal |
+| `.dmg` notarizado (camino C) | Ninguno. Requiere cuenta de pago |
 
 ---
 
-## Camino A — descargar el .dmg que compila GitHub
+## Camino A — descargar el .dmg ya compilado
 
-No necesitas Xcode. GitHub compila la app en un runner macOS y deja el `.dmg`
-listo para descargar.
+No necesitas Xcode. GitHub compila la app y deja el `.dmg` listo.
 
-1. Ve a la pestaña **Actions** del repositorio.
-2. Abre la ejecución más reciente de **«Construir app de macOS»** (o lánzala tú
-   con *Run workflow*).
-3. Descarga el artefacto **`Sapphire-dmg`**.
-4. Descomprime, abre el `.dmg` y arrastra `Sapphire.app` a *Aplicaciones*.
-5. Quita la cuarentena y ábrela por primera vez:
+1. Pestaña **Actions** del repositorio.
+2. Abre la última ejecución de **«Construir app de macOS»**.
+3. Descarga el artefacto **`Sapphire-dmg`** y descomprímelo.
+4. Abre el `.dmg` y **arrastra Sapphire a la carpeta Aplicaciones**, como
+   cualquier app.
+5. La primera vez que la abras, macOS dirá que no puede comprobarla. **Sin
+   tocar el Terminal:**
+   - Ve a  → *Ajustes del Sistema* → *Privacidad y seguridad*.
+   - Baja hasta abajo: verás «Se ha bloqueado el uso de "Sapphire"…».
+   - Pulsa **«Abrir de todos modos»** y confirma.
 
-   ```bash
-   xattr -dr com.apple.quarantine /Applications/Sapphire.app
-   open /Applications/Sapphire.app
-   ```
+   Sólo hay que hacerlo una vez por versión.
 
-**La pega:** esa app va firmada *ad-hoc*, no con un Developer ID. La firma
-cambia en cada compilación, así que macOS considera cada versión una app nueva
-y **te volverá a pedir todos los permisos** (cámara, automatización,
-accesibilidad) cada vez que actualices. Para probarla está bien; para usarla a
-diario, mejor el camino B.
+Si prefieres el Terminal, una línea hace lo mismo:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Sapphire.app
+```
+
+> **La pega del camino A:** la firma ad-hoc cambia en cada compilación, así que
+> macOS considera cada versión una app nueva y **vuelve a pedirte los permisos**
+> (cámara, automatización, accesibilidad) al actualizar. Para probarla está
+> bien; para el día a día, el camino B.
 
 ---
 
-## Camino B — compilar en tu Mac con tu propio Apple ID
+## Camino B — compilar en tu Mac *(recomendado)*
 
-Te da una firma estable: concedes los permisos una vez y se quedan.
-No hace falta pagar los 99 €/año: **un Apple ID gratuito sirve**.
+Firma estable, permisos concedidos una sola vez y **cero avisos de Gatekeeper**,
+porque una app que no se ha descargado nunca entra en cuarentena.
+Un **Apple ID gratuito basta**.
 
 ### 1. Preparar
 
@@ -44,38 +65,57 @@ cd copiamejoradasapphire
 
 ### 2. Añadir tu Apple ID a Xcode
 
-Xcode → *Settings* → *Accounts* → **+** → *Apple ID*. Con eso Xcode crea un
-«Personal Team». Busca tu Team ID:
+Xcode → *Settings* → *Accounts* → **+** → *Apple ID*. Eso crea un «Personal
+Team». Para ver tu Team ID:
 
 ```bash
 security find-identity -v -p codesigning
 ```
 
-### 3. Compilar
+### 3. Compilar e instalar
 
 ```bash
 ./scripts-personal/construir-app.sh TU_TEAM_ID
-```
-
-Sin Team ID, compila con firma ad-hoc:
-
-```bash
-./scripts-personal/construir-app.sh
-```
-
-El proyecto viene con `DEVELOPMENT_TEAM = KVQFWJ7C7S`, que es el equipo del
-autor original de Sapphire: **en tu Mac no vale**. El script lo sobreescribe
-siempre, por eso hay que usarlo en vez de pulsar «Run» en Xcode a secas. Si
-prefieres Xcode, cambia el equipo a mano en *Signing & Capabilities*.
-
-### 4. Instalar
-
-```bash
 cp -R build/Build/Products/Release/Sapphire.app /Applications/
 open /Applications/Sapphire.app
 ```
 
-O haz un `.dmg`: `./scripts-personal/crear-dmg.sh`
+El proyecto viene con `DEVELOPMENT_TEAM = KVQFWJ7C7S`, el equipo del autor
+original de Sapphire: **en tu Mac no vale**. El script lo sobreescribe siempre,
+por eso conviene usarlo en lugar de pulsar «Run» en Xcode a secas.
+
+---
+
+## Camino C — .dmg notarizado *(si tienes cuenta de desarrollador)*
+
+Ya está montado. Añade estos secretos en *Settings → Secrets and variables →
+Actions* del repositorio y el workflow firmará y notarizará solo:
+
+| Secreto | Qué es |
+|---|---|
+| `DEVELOPER_ID_P12` | Tu certificado *Developer ID Application* exportado a `.p12` y codificado en base64 |
+| `DEVELOPER_ID_P12_PASSWORD` | La contraseña del `.p12` |
+| `DEVELOPER_ID_NAME` | `Developer ID Application: Tu Nombre (TEAMID)` |
+| `AC_APPLE_ID` | El correo de tu cuenta de desarrollador |
+| `AC_TEAM_ID` | Tu Team ID |
+| `AC_PASSWORD` | Una contraseña específica de app, de appleid.apple.com |
+
+Para exportar el certificado a base64:
+
+```bash
+base64 -i certificado.p12 | pbcopy
+```
+
+Con esos secretos puestos, el `.dmg` que produce el workflow se instala como el
+de cualquier app comercial: doble clic, arrastrar, abrir. Sin avisos.
+
+En local es lo mismo:
+
+```bash
+DEVELOPER_ID="Developer ID Application: Tu Nombre (TEAMID)" \
+AC_APPLE_ID="tu@correo.com" AC_TEAM_ID="TEAMID" AC_PASSWORD="xxxx-xxxx-xxxx-xxxx" \
+./scripts-personal/crear-dmg.sh
+```
 
 ---
 
@@ -94,27 +134,22 @@ Concédelos sólo cuando uses cada función:
 
 ## Si algo va mal
 
-**«No se puede abrir porque Apple no puede comprobar que no contiene
-software malicioso»** → es la cuarentena:
-`xattr -dr com.apple.quarantine /Applications/Sapphire.app`
+**«No se puede abrir porque Apple no puede comprobar…»** → es la cuarentena.
+Ajustes del Sistema → Privacidad y seguridad → «Abrir de todos modos».
 
-**La compilación falla con «Signing for … requires a development team»** →
-estás compilando sin sobreescribir el equipo del autor. Usa
-`construir-app.sh` con tu Team ID.
+**«Signing for … requires a development team»** al compilar → estás usando el
+equipo del autor original. Usa `construir-app.sh` con tu Team ID.
 
-**Falla con «SDK does not support deployment target»** → tu Xcode es anterior
-al SDK de macOS 26. Actualiza Xcode, o compila con un objetivo más bajo:
+**«SDK does not support deployment target»** → tu Xcode es anterior al SDK de
+macOS 26. Actualiza Xcode, o baja el objetivo:
 
 ```bash
-xcodebuild -project Sapphire.xcodeproj -scheme Sapphire -configuration Release \
-  -derivedDataPath build MACOSX_DEPLOYMENT_TARGET=15.0 \
-  CODE_SIGN_IDENTITY="-" CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM="" build
+./scripts-personal/construir-app.sh "" Release   # y edita MACOSX_DEPLOYMENT_TARGET
 ```
 
-**El reconocimiento facial no autentica nunca** → es lo correcto y es
-deliberado. Falta el modelo de detección de suplantación, que no se distribuye
-con el código fuente. Sin él la app **no autentica** en vez de dejar pasar a
-cualquiera con una foto. Ver `AUDITORIA.md §1.1`.
+**El reconocimiento facial no autentica nunca** → es deliberado y es lo
+correcto. Falta el modelo de detección de suplantación, que no se distribuye con
+el código. Sin él la app **no autentica**, en vez de dejar entrar a cualquiera
+con una foto. Ver `AUDITORIA.md §1.1`.
 
-**Otro error de compilación** → pásame `build.log`, que es justo lo que me
-falta para cerrar esto.
+**Otro error de compilación** → pásame el `build.log`.
