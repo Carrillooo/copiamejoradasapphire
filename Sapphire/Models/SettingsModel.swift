@@ -954,7 +954,8 @@ struct Settings: Codable, Equatable {
     var launchAtLogin: Bool = true
     var appLanguage: String = "en"
     var hapticFeedbackEnabled: Bool = true
-    var googleAnalyticsEnabled: Bool = true
+    // Sin telemetría por defecto: se activa a mano en los ajustes.
+    var googleAnalyticsEnabled: Bool = false
     var hideFromScreenSharing: Bool = false
     var notchDisplayTarget: NotchDisplayTarget = .macbookDisplay
     var floatingIslandOnNotchlessDisplays: Bool = false
