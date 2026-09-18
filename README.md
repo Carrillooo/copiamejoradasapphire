@@ -46,14 +46,25 @@ respaldo en versiones anteriores. Respeta *Reducir movimiento*.
   tabla de estado de funciones y plan por fases.
 - [`DOCS-ES/COMPILAR.md`](DOCS-ES/COMPILAR.md) — cómo compilarlo en tu Mac.
 
-## Antes de compilar
+## Instalar
 
-Los binarios grandes de upstream (el modelo `ArcFace` de 84 MB, vídeos de demo,
-`SystemSounds`, `.dylib`) no se versionan aquí. Recupéralos con:
+**Sin Xcode:** GitHub compila la app por ti. Ve a la pestaña **Actions**, abre la
+última ejecución de «Construir app de macOS» y descarga el artefacto
+`Sapphire-dmg`.
+
+**Con Xcode**, que es lo recomendable para uso diario (los permisos de macOS se
+quedan concedidos en vez de volver a pedirse en cada versión):
 
 ```bash
-./scripts-personal/restaurar-binarios.sh
+./scripts-personal/restaurar-binarios.sh   # binarios de upstream (84 MB de modelo, vídeos…)
+./scripts-personal/construir-app.sh TU_TEAM_ID
 ```
+
+Un Apple ID gratuito basta. El proyecto trae el Team ID del autor original, que
+en tu Mac no vale; el script lo sobreescribe.
+
+Pasos detallados, permisos y solución de problemas en
+[`DOCS-ES/INSTALAR.md`](DOCS-ES/INSTALAR.md).
 
 ## Estado
 

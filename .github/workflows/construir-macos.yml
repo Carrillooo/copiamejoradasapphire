@@ -1,0 +1,103 @@
+name: Construir app de macOS
+
+# Compila Sapphire Personal en un runner macOS y publica el .app y el .dmg
+# como artefactos descargables.
+#
+# Firma: ad-hoc (`-`). En Apple Silicon un binario SIN firma no arranca, así que
+# ad-hoc es el mínimo viable sin cuenta de desarrollador. Implica que macOS
+# pedirá los permisos (cámara, automatización…) de nuevo en cada versión, porque
+# la firma cambia en cada compilación. Para uso diario, compila en local con tu
+# propio Apple ID gratuito: ver DOCS-ES/INSTALAR.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_target:
+        description: "MACOSX_DEPLOYMENT_TARGET (vacío = el del proyecto, 26.0)"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "DOCS-ES/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Entorno disponible
+        # Se imprime ANTES de compilar: si el SDK no llega al deployment target
+        # del proyecto, esto es lo que lo explica.
+        run: |
+          sw_vers
+          uname -m
+          echo "--- Xcode disponibles ---"
+          ls /Applications | grep -i '^Xcode' || true
+          xcodebuild -version
+          echo "--- SDKs de macOS ---"
+          xcodebuild -showsdks | grep -i macos || true
+
+      - name: Restaurar binarios de upstream
+        run: ./scripts-personal/restaurar-binarios.sh
+
+      - name: Compilar (Release, firma ad-hoc)
+        id: build
+        run: |
+          set -o pipefail
+          EXTRA=""
+          if [ -n "${{ inputs.deployment_target }}" ]; then
+            EXTRA="MACOSX_DEPLOYMENT_TARGET=${{ inputs.deployment_target }}"
+          fi
+          xcodebuild \
+            -project Sapphire.xcodeproj \
+            -scheme Sapphire \
+            -configuration Release \
+            -derivedDataPath build \
+            -destination 'generic/platform=macOS' \
+            CODE_SIGN_IDENTITY="-" \
+            CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            ENABLE_HARDENED_RUNTIME=NO \
+            ONLY_ACTIVE_ARCH=NO \
+            $EXTRA \
+            build 2>&1 | tee build.log
+
+      - name: Resumen de errores
+        if: failure()
+        run: |
+          echo "=== errores ==="
+          grep -E "error:|warning: .*deployment target" build.log | sort -u | head -60 || true
+
+      - name: Empaquetar .dmg
+        run: ./scripts-personal/crear-dmg.sh build/Build/Products/Release/Sapphire.app
+
+      - name: Subir .app
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sapphire-app
+          path: build/Build/Products/Release/Sapphire.app
+          if-no-files-found: error
+
+      - name: Subir .dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sapphire-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+
+      - name: Subir registro de compilación
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
