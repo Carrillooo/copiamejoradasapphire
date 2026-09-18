@@ -56,7 +56,7 @@ respaldo en versiones anteriores. Respeta *Reducir movimiento*.
 quedan concedidos en vez de volver a pedirse en cada versión):
 
 ```bash
-./scripts-personal/restaurar-binarios.sh   # binarios de upstream (84 MB de modelo, vídeos…)
+./scripts-personal/restaurar-binarios.sh   # opcional: modelo facial de 84 MB
 ./scripts-personal/construir-app.sh TU_TEAM_ID
 ```
 

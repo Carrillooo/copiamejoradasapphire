@@ -60,8 +60,11 @@ Un **Apple ID gratuito basta**.
 ```bash
 git clone https://github.com/Carrillooo/copiamejoradasapphire.git
 cd copiamejoradasapphire
-./scripts-personal/restaurar-binarios.sh
+./scripts-personal/restaurar-binarios.sh   # opcional: modelo de reconocimiento facial
 ```
+
+El repositorio compila tal cual. Ese script sólo añade el modelo `ArcFace`
+(84 MB) y los vídeos de demostración, que no se versionan por tamaño.
 
 ### 2. Añadir tu Apple ID a Xcode
 

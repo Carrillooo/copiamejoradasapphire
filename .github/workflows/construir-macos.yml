@@ -51,7 +51,11 @@ jobs:
           echo "--- SDKs de macOS ---"
           xcodebuild -showsdks | grep -i macos || true
 
-      - name: Restaurar binarios de upstream
+      - name: Restaurar binarios opcionales de upstream
+        # No bloquea la compilación: lo necesario para compilar está en el repo.
+        # Esto sólo añade el modelo de reconocimiento facial. Si falla, la app
+        # se compila igual, sin reconocimiento facial.
+        continue-on-error: true
         run: ./scripts-personal/restaurar-binarios.sh
 
       - name: Compilar (Release, firma ad-hoc)
