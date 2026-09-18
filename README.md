@@ -68,6 +68,12 @@ Pasos detallados, permisos y solución de problemas en
 
 ## Estado
 
-**Este código no se ha compilado.** Se escribió en un contenedor Linux sin
-macOS ni Xcode; la verificación fue por lectura. Ver `DOCS-ES/AUDITORIA.md §4`
-para qué está comprobado y qué no.
+**Compila.** El proyecto se construye entero en CI y produce `Sapphire.app` y un
+`.dmg` descargables desde la pestaña *Actions*.
+
+Conviene saber que **el repositorio público de upstream no compila tal y como
+está publicado**: excluye sus propios stubs del target. Eso y otros tres
+arreglos están detallados en [`DOCS-ES/AUDITORIA.md §4`](DOCS-ES/AUDITORIA.md).
+
+Que compile no es que funcione: el comportamiento en ejecución —el anillo en
+pantalla, la cámara, los permisos, Spotify— sigue sin probarse en un Mac real.

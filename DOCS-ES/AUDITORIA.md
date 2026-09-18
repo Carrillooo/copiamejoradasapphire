@@ -121,7 +121,7 @@ hoy y así consta en la tabla de abajo.
 |---|---|---|
 | Face ID — fail-closed sin modelo | ✅ Corregido | No autentica sin liveness |
 | Face ID — liveness en el registro | ✅ Corregido | Eliminado el `if false` |
-| Face ID — anillo de poses estilo Apple | ✅ Implementado | Sin compilar (ver §4) |
+| Face ID — anillo de poses estilo Apple | ✅ Implementado y compila | Sin ver en pantalla (ver §4) |
 | Face ID — tarjeta de autenticación | ⚠️ Vista lista, sin enganchar al notch | Ver §3 |
 | Face ID — liveness funcionando | ❌ Bloqueado | Falta el modelo, cifrado con clave ajena |
 | Spotify — reanudar | ✅ Corregido | |
@@ -157,19 +157,34 @@ que el compilador liste los `switch` que faltan, y renderizar
 
 ---
 
-## 4. Lo que no he podido probar
+## 4. Qué está probado y qué no
 
-Esta sesión corre en un contenedor **Linux x86_64**: no hay macOS, ni Xcode, ni
-toolchain de Swift. **Nada de esto se ha compilado ni ejecutado.**
+**Compila.** El proyecto se construye entero en un runner macOS de GitHub
+Actions (Release, firma ad-hoc) y produce `Sapphire.app` y un `.dmg`.
+Ver `.github/workflows/construir-macos.yml`.
 
-Verificado por lectura: balance de llaves y paréntesis, coincidencia exacta de
-cada sustitución, `switch` exhaustivos sobre `FaceIDSecurityEvent` actualizados
-(sólo hay uno), `@ViewBuilder` en `ViewModifier.body`, y que el fichero nuevo
-entra en el target (el proyecto usa `PBXFileSystemSynchronizedRootGroup`, así que
-los ficheros se recogen del sistema de archivos).
+Llegar ahí requirió cuatro arreglos, tres de ellos defectos del propio
+repositorio público:
 
-Sin probar: que compile, el aspecto real del anillo, el rendimiento de la cámara,
-y cualquier cosa que dependa de permisos de macOS.
+1. `SystemSounds/` y los `.dylib` faltaban en la copia inicial: el `pbxproj`
+   referencia 40 ficheros `.caf` explícitamente.
+2. **`EXCLUDED_SOURCE_FILE_NAMES = "*/Sapphire/Stubs/*"`** — upstream publica
+   los stubs y los excluye del target, así que el repositorio público **no
+   compila tal y como está publicado**. Vaciar esa exclusión no habilita nada
+   de pago: los stubs siguen devolviendo lo mismo.
+3. `ContinuityManager.openWidgets()` y `CleanURLManager.stopMonitoring()`
+   faltaban en los stubs aunque `AppDelegate` los llama.
+4. Un error mío en el workflow (`secrets` no es un contexto válido en un `if`).
+
+**Lo que sigue sin probarse** es todo lo que necesita un Mac de verdad
+ejecutando la app: el aspecto real del anillo de poses, el rendimiento de la
+cámara, el comportamiento con permisos denegados, la reproducción de Spotify y
+el fail-closed de Face ID en ejecución. Que compile no es que funcione.
+
+Esta sesión corre en Linux; la verificación local fue por lectura (balance de
+llaves, coincidencia exacta de cada sustitución, `switch` exhaustivos, el
+`@ViewBuilder` que faltaba en `ViewModifier.body`). El compilador confirmó
+después que esa lectura era correcta: **ningún error salió de mis cambios**.
 
 ---
 
