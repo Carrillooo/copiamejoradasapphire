@@ -113,6 +113,9 @@ final class CleanURLManager {
     private init() {}
     func start() {}
     func stopPolling() {}
+    // AppDelegate llama a stopMonitoring() al cerrar, como en el resto de
+    // managers; el stub sólo declaraba stopPolling().
+    func stopMonitoring() {}
 }
 
 final class FinderCutPasteManager {

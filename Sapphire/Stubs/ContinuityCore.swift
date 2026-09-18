@@ -216,6 +216,9 @@ final class ContinuityManager: ObservableObject {
     func sendMediaCommand(_ action: ContinuityMediaAction, seekMs: Int? = nil) {}
     func sendFiles(_ urls: [URL], toPeerID peerID: String) {}
     func dismissNotificationOnPhone(peerID: String, key: String) {}
+    // La invoca AppDelegate al abrir una URL sapphire://android-widgets.
+    // La continuidad con Android no está implementada en esta edición.
+    func openWidgets() {}
     func invokeNotificationAction(peerID: String, key: String, actionId: String, replyText: String?) {}
 }
 
