@@ -54,7 +54,8 @@ else
     DEVELOPMENT_TEAM=""
     PROVISIONING_PROFILE_SPECIFIER=""
     ENABLE_HARDENED_RUNTIME=NO
-    CODE_SIGN_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements
+    SAPPHIRE_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements
+    WIDGETS_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements
   )
 fi
 echo

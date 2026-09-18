@@ -88,7 +88,8 @@ jobs:
             DEVELOPMENT_TEAM="" \
             PROVISIONING_PROFILE_SPECIFIER="" \
             ENABLE_HARDENED_RUNTIME=NO \
-            CODE_SIGN_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements \
+            SAPPHIRE_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements \
+            WIDGETS_ENTITLEMENTS=Sapphire/Sapphire-adhoc.entitlements \
             ONLY_ACTIVE_ARCH=NO \
             $EXTRA \
             build 2>&1 | tee build.log
