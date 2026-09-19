@@ -119,7 +119,27 @@ jobs:
             exit 1
           fi
           if [ ! -d "$PKG" ]; then
-            echo "No está $PKG: el paso de restauración no ha traído el modelo." >&2
+            # El paso de restauración es `continue-on-error`: cuando falla se
+            # marca en verde y su salida se pierde. Aquí el fallo SÍ se ve.
+            #
+            # Y se baja sólo el modelo, sin los vídeos de demostración que
+            # aquel script trae de paso: son 54 MB que la compilación no usa,
+            # y cada cosa que se descarga es una cosa más que puede fallar.
+            echo "El modelo no está. Bajándolo de upstream, con la salida a la vista:"
+            echo "--------------------------------------------------------------"
+            TMP="$(mktemp -d)"
+            trap 'rm -rf "$TMP"' EXIT
+            git clone --filter=blob:none --sparse --depth 50 \
+              https://github.com/cshariq/Sapphire.git "$TMP/up"
+            git -C "$TMP/up" sparse-checkout set Sapphire/Services/FaceID/Models
+            mkdir -p "$(dirname "$PKG")"
+            cp -R "$TMP/up/$PKG" "$(dirname "$PKG")/"
+            echo "--------------------------------------------------------------"
+            du -sh "$PKG" || true
+          fi
+
+          if [ ! -d "$PKG" ]; then
+            echo "Sigue sin estar $PKG. Arriba está el motivo." >&2
             exit 1
           fi
 
