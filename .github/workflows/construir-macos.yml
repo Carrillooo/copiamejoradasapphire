@@ -22,7 +22,7 @@ on:
       - "**/*.md"
       - "DOCS-ES/**"
       - "previews/**"
-      - "Tools/IrisPreview/**"
+      - "scripts-personal/IrisPreview/**"
 
 permissions:
   contents: read
