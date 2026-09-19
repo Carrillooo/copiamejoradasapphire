@@ -3219,7 +3219,19 @@ struct PlaylistView: View {
                                     }
                                 )
                                 .onAppear {
-                                    if index >= sortedViewModels.count - 5 {
+                                    // `viewModels.count`, no `sortedViewModels.count`.
+                                    //
+                                    // Son el mismo número —ordenar no añade ni
+                                    // quita canciones—, pero `sortedViewModels`
+                                    // es una propiedad calculada: leerla ordena
+                                    // la lista ENTERA otra vez. Aquí se leía
+                                    // desde el `onAppear` de cada fila, así que
+                                    // bajar por una lista de quinientas
+                                    // canciones la reordenaba quinientas veces,
+                                    // y con `localizedStandardCompare`, que
+                                    // compara según el idioma y es de lo más
+                                    // caro que hay para ordenar texto.
+                                    if index >= viewModels.count - 5 {
                                         Task { await spotifyPrivateAPI.loadMorePlaylistTracks() }
                                     }
                                 }
