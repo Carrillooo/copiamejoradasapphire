@@ -1495,8 +1495,18 @@ struct FaceAligner {
 
 // MARK: - CoreML Dynamic RAM Manager (Evicts on Idle, Fast-Loads on Demand)
 
-final class FaceIDModelManager {
+final class FaceIDModelManager: ObservableObject {
     static let shared = FaceIDModelManager()
+
+    /// Copia publicada de `livenessAvailability`, para las vistas.
+    ///
+    /// El estado real vive tras un candado porque lo consulta la cola de
+    /// captura. Sin esta copia observable, el aviso de los ajustes —«has
+    /// activado la detección de suplantación pero no hay modelo»— sólo
+    /// aparecía si el panel se redibujaba por otro motivo, porque la carga del
+    /// modelo termina en segundo plano DESPUÉS de dibujarlo. Es decir: el aviso
+    /// estaba escrito y casi nunca se veía.
+    @Published private(set) var publishedLivenessState: LivenessModelAvailability = .unknown
     private let lock = NSLock()
     private let modelLoadingQueue = DispatchQueue(label: "com.sapphire.modelLoadingQueue", qos: .userInitiated)
 
@@ -1539,9 +1549,42 @@ final class FaceIDModelManager {
 
     /// El usuario lo ha pedido pero no se puede cumplir. La interfaz lo usa
     /// para avisar en lugar de aparentar que está protegido.
+    ///
+    /// Mientras el modelo no se haya intentado cargar todavía, no se calla el
+    /// aviso: se mira si el fichero siquiera existe. Los ajustes se abren antes
+    /// de que ningún registro haya llamado a `prewarm()`, así que esperar al
+    /// estado real significaba no avisar nunca en el momento en que importa
+    /// —justo cuando el usuario está mirando ese interruptor.
     var antiSpoofRequestedButUnavailable: Bool {
-        SettingsModel.shared.settings.faceIDAntiSpoofEnabled && livenessState == .unavailable
+        guard SettingsModel.shared.settings.faceIDAntiSpoofEnabled else { return false }
+        switch livenessState {
+        case .ready:            return false
+        case .unavailable:      return true
+        case .unknown, .loading: return !Self.livenessModelIsPresent
+        }
     }
+
+    /// ¿Está el modelo de liveness en algún sitio del que se pueda cargar?
+    ///
+    /// Sólo mira el disco: no compila ni carga nada, así que se puede llamar
+    /// desde una vista. Se calcula una vez, porque el contenido del paquete no
+    /// cambia mientras la app está abierta.
+    static let livenessModelIsPresent: Bool = {
+        let manager = FaceIDModelManager.shared
+        if FileManager.default.fileExists(atPath: manager.persistentCacheModelURL.path) { return true }
+        if manager.locateResource(name: "PassiveLiveness", ext: "enc") != nil { return true }
+        let names = [
+            "PassiveLiveness_INT8",
+            "PassiveLivenessM4Pro",
+            "PassiveLiveness_w1.25_ep08_FP16",
+            "PassiveLiveness_w1.25_ep10_INT8",
+            "PassiveLiveness_w1.5_ep10_INT8"
+        ]
+        return names.contains { name in
+            manager.locateResource(name: name, ext: "mlmodelc") != nil
+                || manager.locateResource(name: name, ext: "mlpackage") != nil
+        }
+    }()
 
     private let persistentCacheModelURL: URL = {
         let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
@@ -1567,11 +1610,22 @@ final class FaceIDModelManager {
         livenessModel = nil
         livenessAvailability = .unknown
         sharedAntiSpoofBuffer = nil
+        DispatchQueue.main.async { self.publishedLivenessState = .unknown }
     }
 
     private func loadModelsIfNeeded() {
         lock.lock()
-        if isCurrentlyLoading || (embeddingModel != nil && livenessModel != nil) {
+        // `livenessModel` se queda en nil para siempre cuando el modelo no
+        // viene con la app, que es el caso normal: no se distribuye. Con la
+        // condición anterior —«ambos modelos cargados»— esto no se cumplía
+        // nunca, así que CADA `prewarm()` volvía a rastrear el paquete entero
+        // buscando un fichero que no está. Y `prewarm()` se llama al empezar
+        // cada registro y cada autenticación.
+        //
+        // Ya resuelto significa: la huella facial está cargada y del liveness
+        // ya sabemos a qué atenernos, esté o no.
+        let livenessResolved = livenessModel != nil || livenessAvailability == .unavailable
+        if isCurrentlyLoading || (embeddingModel != nil && livenessResolved) {
             lock.unlock()
             return
         }
@@ -1607,6 +1661,7 @@ final class FaceIDModelManager {
         lock.lock()
         livenessAvailability = .loading
         lock.unlock()
+        DispatchQueue.main.async { self.publishedLivenessState = .loading }
 
         performLivenessModelLoad(cfg: cfg)
 
@@ -1614,6 +1669,8 @@ final class FaceIDModelManager {
         let resolved: LivenessModelAvailability = (livenessModel != nil) ? .ready : .unavailable
         livenessAvailability = resolved
         lock.unlock()
+
+        DispatchQueue.main.async { self.publishedLivenessState = resolved }
 
         if resolved == .unavailable {
             print("[FaceID Model Manager] Modelo de liveness no disponible. La autenticación facial queda deshabilitada (fail-closed).")

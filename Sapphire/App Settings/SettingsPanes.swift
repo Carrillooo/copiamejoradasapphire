@@ -5154,6 +5154,10 @@ struct NotificationsSettingsView: View {
 struct ProximityUnlockSettingsView: View {
     @EnvironmentObject var settings: SettingsEditingSession
     @ObservedObject private var authManager = AuthenticationManager.shared
+    /// El modelo de liveness se resuelve en segundo plano, después de que este
+    /// panel se haya dibujado. Sin observarlo, el aviso de más abajo se
+    /// escribía pero casi nunca llegaba a verse.
+    @ObservedObject private var faceModels = FaceIDModelManager.shared
 
     @State private var showPasswordPrompt = false
     @State private var showUnnamedDevices = false
@@ -5505,7 +5509,7 @@ struct ProximityUnlockSettingsView: View {
             // El modelo de liveness no se distribuye con el código. Si el
             // usuario activa esto y no está, la protección NO se aplica: hay
             // que decirlo, no dejar un interruptor encendido que no protege.
-            if FaceIDModelManager.shared.antiSpoofRequestedButUnavailable {
+            if faceModels.antiSpoofRequestedButUnavailable {
                 HStack(alignment: .top, spacing: Iris.Spacing.sm) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(Iris.Palette.warning)
