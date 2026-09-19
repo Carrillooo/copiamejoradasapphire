@@ -283,7 +283,7 @@ enum HelperAlertPresenter {
             backing: .buffered,
             defer: false
         )
-        window.title = "Sapphire"
+        window.title = "Iris"
         window.isOpaque = false
         window.backgroundColor = .clear
         window.alphaValue = 0.001

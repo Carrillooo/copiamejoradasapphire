@@ -1770,7 +1770,8 @@ class SpotifyPrivateAPIManager: ObservableObject {
                 "device_type": "computer",
                 "metadata": [:],
                 "model": "web_player",
-                "name": "Sapphire",
+                // El nombre que Spotify enseña en su lista de dispositivos.
+                "name": "Iris",
                 "platform_identifier": "osx",
                 "is_group": false,
                 "is_public": false

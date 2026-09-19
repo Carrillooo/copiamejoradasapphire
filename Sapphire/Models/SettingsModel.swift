@@ -1686,7 +1686,7 @@ struct SettingsBackupPayload: Codable {
     let settings: Settings
 
     init(settings: Settings, exportedAt: Date = .now) {
-        self.appName = "Sapphire"
+        self.appName = "Iris"
         self.schemaVersion = 1
         self.exportedAt = exportedAt
         self.settings = settings
