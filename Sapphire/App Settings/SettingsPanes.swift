@@ -2773,7 +2773,7 @@ struct WidgetsSettingsView: View {
     }
 
     var body: some View {
-        let lockedWidgetTypes = Set(WidgetType.allCases.filter { type in
+        let lockedWidgetTypes = Set(WidgetType.availableCases.filter { type in
             type.requiredPremiumFeature
                 .map { !subscriptionManager.hasAccess(to: $0) } ?? false
         })
@@ -2893,7 +2893,7 @@ struct LiveActivitiesSettingsView: View {
     }
 
     var body: some View {
-        let lockedActivityTypes = Set(LiveActivityType.allCases.filter { type in
+        let lockedActivityTypes = Set(LiveActivityType.availableCases.filter { type in
             type.requiredPremiumFeature
                 .map { !subscriptionManager.hasAccess(to: $0) } ?? false
         })
@@ -2932,7 +2932,7 @@ struct LiveActivitiesSettingsView: View {
 
                     DisclosureGroup("Advanced: Hide Specific Activities in Full Screen") {
                         VStack(spacing: 0) {
-                            ForEach(LiveActivityType.allCases) { activityType in
+                            ForEach(LiveActivityType.availableCases) { activityType in
                                 Toggle(activityType.displayName, isOn: hideInFullScreenBinding(for: activityType))
                                     .padding(.vertical, 8)
                             }

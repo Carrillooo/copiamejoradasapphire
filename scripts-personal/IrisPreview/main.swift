@@ -127,8 +127,9 @@ private struct IrisSpecimen: View {
             .background(Iris.Palette.surfaceSunken)
 
             // --- Contenido ------------------------------------------------
-            ScrollView {
-                VStack(alignment: .leading, spacing: Iris.Spacing.xl) {
+            // Sin ScrollView: ImageRenderer no resuelve su contenido (no hay
+            // viewport que medir) y el panel salía en blanco.
+            VStack(alignment: .leading, spacing: Iris.Spacing.xl) {
                     VStack(alignment: .leading, spacing: Iris.Spacing.xs) {
                         Text("Apariencia").irisText(Iris.Typography.display)
                         Text("Escala tipográfica, superficies y controles del sistema de diseño.")
@@ -208,13 +209,12 @@ private struct IrisSpecimen: View {
                     }
                     .padding(Iris.Spacing.lg)
                     .irisCard(.panel, radius: Iris.Radius.xl)
-                }
-                .padding(Iris.Spacing.xl)
             }
-            .frame(maxWidth: .infinity)
+            .padding(Iris.Spacing.xl)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .background(Iris.Palette.surfaceBase)
         }
-        .frame(width: 900, height: 780)
+        .frame(width: 980, height: 940)
     }
 }
 

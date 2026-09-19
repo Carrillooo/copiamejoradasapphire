@@ -1161,7 +1161,7 @@ struct Settings: Codable, Equatable {
     var storageWidgetEnabled: Bool = false
     var storageOpenOnClick: Bool = true
     var selectedShortcuts: [ShortcutInfo] = []
-    var liveActivityOrder: [LiveActivityType] = LiveActivityType.allCases
+    var liveActivityOrder: [LiveActivityType] = LiveActivityType.availableCases
     var musicLiveActivityEnabled: Bool = true
     var weatherLiveActivityEnabled: Bool = true
     var calendarLiveActivityEnabled: Bool = true
@@ -1305,14 +1305,14 @@ struct Settings: Codable, Equatable {
             return true
         }
 
-        let allActivities = LiveActivityType.allCases
+        let allActivities = LiveActivityType.availableCases
         liveActivityOrder = liveActivityOrder.filter { allActivities.contains($0) }.deduplicated()
         let missingActivities = allActivities.filter { !liveActivityOrder.contains($0) }
         if !missingActivities.isEmpty {
             liveActivityOrder.append(contentsOf: missingActivities)
         }
 
-        let allWidgets = WidgetType.allCases
+        let allWidgets = WidgetType.availableCases
         widgetOrder = widgetOrder.filter { allWidgets.contains($0) }.deduplicated()
         let missingWidgets = allWidgets.filter { !widgetOrder.contains($0) }
         if !missingWidgets.isEmpty {

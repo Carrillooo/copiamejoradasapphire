@@ -26,7 +26,14 @@ struct SettingsSidebarGroup: Identifiable {
 }
 
 extension SettingsSection {
-    static let sidebarGroups: [SettingsSidebarGroup] = [
+    /// Grupos ya filtrados: las secciones sin implementación real no se
+    /// ofrecen (ver Iris.Availability). Un grupo que se quede vacío desaparece.
+    static let sidebarGroups: [SettingsSidebarGroup] = rawSidebarGroups.compactMap { group in
+        let visibles = group.sections.filter(\.isAvailableInIris)
+        return visibles.isEmpty ? nil : SettingsSidebarGroup(title: group.title, sections: visibles)
+    }
+
+    private static let rawSidebarGroups: [SettingsSidebarGroup] = [
         .init(title: "General", sections: [.general, .keyboardShortcuts, .bluetoothUnlock, .intelligence, .neardrop, .continuity]),
         .init(title: "Notch", sections: [.appearance, .widgets, .liveActivities, .lockScreen, .notifications, .hud]),
         .init(title: "Widgets y contenido", sections: [.music, .weather, .calendar, .sports, .finance, .battery, .audio, .bluetooth, .shortcuts, .fileShelf, .notes, .clipboard, .mirror, .caffeine]),
