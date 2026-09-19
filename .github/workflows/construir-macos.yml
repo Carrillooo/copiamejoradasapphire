@@ -99,8 +99,18 @@ jobs:
       - name: Resumen de errores
         if: failure()
         run: |
-          echo "=== errores ==="
-          grep -E "error:|warning: .*deployment target" build.log | sort -u | head -60 || true
+          echo "=== errores del compilador ==="
+          # Sólo diagnósticos reales: ruta:línea:columna: error.
+          # Un `grep error:` a secas caza parámetros llamados `error`
+          # (didFailToConnect:error:) y llena el resumen de ruido justo cuando
+          # hay que leerlo rápido.
+          grep -E "^[^ ]+:[0-9]+:[0-9]+: (error|fatal error):" build.log \
+            | sed 's|.*/copiamejoradasapphire/||' | sort -u | head -40 || true
+          echo
+          echo "=== otros fallos (enlazado, recursos, firma) ==="
+          grep -E "^(error|clang|ld|codesign|xcodebuild).*(error|failed)" build.log \
+            | sort -u | head -20 || true
+          grep -E "warning: .*deployment target" build.log | sort -u | head -5 || true
 
       - name: Importar certificado Developer ID
         # Opcional. Sólo se ejecuta si has añadido los secretos del repositorio.
