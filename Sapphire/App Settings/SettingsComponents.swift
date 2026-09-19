@@ -547,7 +547,6 @@ struct ReorderableVStack<Item: Identifiable & Equatable, Content: View>: View {
     @ViewBuilder var content: (Item) -> Content
 
     @State private var draggingIndex: Int?
-    @State private var dragOffset: CGSize = .zero
 
     init(items: Binding<[Item]>, @ViewBuilder content: @escaping (Item) -> Content) {
         self._items = items
@@ -557,29 +556,23 @@ struct ReorderableVStack<Item: Identifiable & Equatable, Content: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
-                content(item)
-                    .offset(y: draggingIndex == index ? dragOffset.height : 0)
-                    .opacity(draggingIndex == index ? 0.75 : 1)
-                    .zIndex(draggingIndex == index ? 1 : 0)
-                    .contentShape(Rectangle())
-                    .gesture(
-                        DragGesture(minimumDistance: 10, coordinateSpace: .global)
-                            .onChanged { value in
-                                if draggingIndex == nil {
-                                    draggingIndex = index
-                                }
-                                dragOffset = value.translation
-                            }
-                            .onEnded { value in
-                                if let draggingIndex = draggingIndex {
-                                    moveItem(from: draggingIndex, with: value)
-                                }
-                                withAnimation {
-                                    self.draggingIndex = nil
-                                    dragOffset = .zero
-                                }
-                            }
-                    )
+                // El desplazamiento del arrastre vive DENTRO de la fila.
+                //
+                // Antes era un @State de esta vista y se escribía en cada
+                // evento del ratón, unas cien veces por segundo. Como está en
+                // la vista padre, cada uno de esos eventos reconstruía la lista
+                // ENTERA —todas las filas, con sus interruptores y sus
+                // selectores— para mover una sola. De ahí que arrastrar para
+                // reordenar fuera a tirones.
+                ReorderableRow(
+                    isDragging: draggingIndex == index,
+                    onBegin: { if draggingIndex == nil { draggingIndex = index } },
+                    onEnd: { translation in
+                        if let from = draggingIndex { moveItem(from: from, by: translation) }
+                        withAnimation { draggingIndex = nil }
+                    },
+                    content: { content(item) }
+                )
 
                 if index != items.count - 1 {
                     Rectangle()
@@ -590,12 +583,11 @@ struct ReorderableVStack<Item: Identifiable & Equatable, Content: View>: View {
         }
     }
 
-    private func moveItem(from fromIndex: Int, with value: DragGesture.Value) {
+    private func moveItem(from fromIndex: Int, by translation: CGSize) {
         guard fromIndex < items.count else { return }
 
         let rowHeight: CGFloat = 61.0
-        let verticalTranslation = value.translation.height
-        let moveOffset = Int((verticalTranslation / rowHeight).rounded())
+        let moveOffset = Int((translation.height / rowHeight).rounded())
 
         var toIndex = fromIndex + moveOffset
         toIndex = max(0, min(items.count - 1, toIndex))
@@ -604,6 +596,36 @@ struct ReorderableVStack<Item: Identifiable & Equatable, Content: View>: View {
             let itemToMove = items.remove(at: fromIndex)
             items.insert(itemToMove, at: toIndex)
         }
+    }
+}
+
+/// Una fila arrastrable. Guarda su propio desplazamiento para que moverla no
+/// obligue a redibujar a las demás.
+private struct ReorderableRow<Content: View>: View {
+    let isDragging: Bool
+    let onBegin: () -> Void
+    let onEnd: (CGSize) -> Void
+    @ViewBuilder var content: () -> Content
+
+    @State private var offset: CGSize = .zero
+
+    var body: some View {
+        content()
+            .offset(y: isDragging ? offset.height : 0)
+            .opacity(isDragging ? 0.75 : 1)
+            .zIndex(isDragging ? 1 : 0)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 10, coordinateSpace: .global)
+                    .onChanged { value in
+                        onBegin()
+                        offset = value.translation
+                    }
+                    .onEnded { value in
+                        onEnd(value.translation)
+                        offset = .zero
+                    }
+            )
     }
 }
 
