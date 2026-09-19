@@ -22,7 +22,7 @@ struct InfoContainer: View {
 
             Text(text)
                 .font(.system(size: 13))
-                .foregroundStyle(.white.opacity(0.8))
+                .foregroundStyle(Iris.Palette.textSecondary)
                 .lineSpacing(4)
         }
         .padding()
@@ -46,16 +46,19 @@ struct SettingsSwitch: View {
 struct SettingsRowLabel: View {
     let title: String
     var description: String = ""
-    var titleFont: Font = .system(size: 14, weight: .medium)
+    /// Se conserva el parámetro porque hay llamadas que lo fijan; el color y el
+    /// interlineado salen ya del sistema de diseño.
+    var titleFont: Font = Iris.Typography.headline.font
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: Iris.Spacing.xxs) {
             Text(title)
                 .font(titleFont)
+                .tracking(Iris.Typography.headline.tracking)
+                .foregroundStyle(Iris.Palette.textPrimary)
             if !description.isEmpty {
                 Text(description)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .irisText(Iris.Typography.caption, color: Iris.Palette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -68,11 +71,13 @@ struct SettingsIconBadge: View {
 
     var body: some View {
         Image(systemName: systemImage)
-            .font(.system(size: 18, weight: .medium))
-            .foregroundColor(color)
-            .frame(width: 36, height: 36)
-            .background(color.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .font(.system(size: 17, weight: .medium))
+            .foregroundStyle(color)
+            .frame(width: 34, height: 34)
+            .background(
+                RoundedRectangle(cornerRadius: Iris.Radius.sm, style: .continuous)
+                    .fill(color.opacity(Iris.A11y.increaseContrast ? 0.28 : 0.15))
+            )
     }
 }
 
@@ -80,17 +85,16 @@ struct ReorderHandle: View {
     var body: some View {
         Image(systemName: "line.3.horizontal")
             .font(.system(size: 16, weight: .medium))
-            .foregroundStyle(.white.opacity(0.6))
+            .foregroundStyle(Iris.Palette.textTertiary)
             .padding(.leading, 8)
     }
 }
 
+/// Iris no tiene funciones de pago. Se conserva el tipo porque hay sitios que
+/// lo construyen, pero no dibuja nada: un candado que no cierra nada sería un
+/// adorno que miente.
 struct PremiumLockBadge: View {
-    var body: some View {
-        Image(systemName: "lock.fill")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(.secondary)
-    }
+    var body: some View { EmptyView() }
 }
 
 extension Binding where Value == Bool {
@@ -144,7 +148,7 @@ struct IconToggleRow: View {
 
             Text(title)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.white)
+                .foregroundStyle(Iris.Palette.textPrimary)
 
             Spacer()
 
@@ -211,7 +215,7 @@ struct WidgetRowView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(widgetType.displayName)
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Iris.Palette.textPrimary)
                     if isAtCapacity {
                         Text("Not enough notch space on this display.")
                             .font(.caption2)
@@ -411,7 +415,7 @@ struct SystemAppRowView: View {
 
             Text(app.name)
                 .font(.system(size: 13))
-                .foregroundStyle(.white)
+                .foregroundStyle(Iris.Palette.textPrimary)
 
             Spacer()
 
@@ -488,7 +492,7 @@ struct AppTogglesListView: View {
             if showSearch {
                 ClearableSearchField(placeholder: "Search installed apps", text: $query)
                 .padding(10)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .background(Iris.Palette.fillElevated, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .padding(.horizontal)
             }
 
@@ -579,7 +583,7 @@ struct ReorderableVStack<Item: Identifiable & Equatable, Content: View>: View {
 
                 if index != items.count - 1 {
                     Rectangle()
-                        .fill(Color.white.opacity(0.2))
+                        .fill(Iris.Palette.hairline)
                         .frame(height: 1)
                 }
             }
@@ -806,9 +810,12 @@ struct DeferredValueEditor<Content: View>: View {
 }
 
 struct SettingsContainerModifier: ViewModifier {
+    // Antes: relleno negro al 15% y borde blanco al 10%, fijos. Eso da por
+    // supuesta la apariencia oscura; en clara quedaba un velo gris sobre fondo
+    // claro. Ahora es una superficie del sistema de diseño, que resuelve
+    // material, borde y sombra según el nivel y la apariencia.
     func body(content: Content) -> some View {
-        content
-            .roundedCard(fill: Color.black.opacity(0.15), cornerRadius: 24, stroke: Color.white.opacity(0.1))
+        content.irisCard(.panel, radius: Iris.Radius.xl)
     }
 }
 
@@ -818,15 +825,17 @@ struct SettingsSectionHeader: View {
 
     var body: some View {
         Text(title)
-            .font(.headline)
-            .padding([.top, .horizontal])
+            .irisText(Iris.Typography.headline)
+            .padding(.top, Iris.Spacing.lg)
+            .padding(.horizontal, Iris.Spacing.lg)
             .frame(maxWidth: .infinity, alignment: .leading)
         if let description {
             Text(description)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .padding(.horizontal)
-                .padding(.bottom, 5)
+                .irisText(Iris.Typography.caption, color: Iris.Palette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, Iris.Spacing.lg)
+                .padding(.bottom, Iris.Spacing.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -858,9 +867,9 @@ struct StatusCapsuleLabel: View {
                 .font(.system(size: 11, weight: .semibold, design: .rounded))
         }
         .foregroundStyle(color)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(color.opacity(0.14), in: Capsule())
+        .padding(.horizontal, Iris.Spacing.md)
+        .padding(.vertical, Iris.Spacing.xs + 1)
+        .background(color.opacity(Iris.A11y.increaseContrast ? 0.26 : 0.14), in: Capsule())
     }
 }
 
@@ -927,19 +936,19 @@ struct ToggleRow: View {
         }
         switch style {
         case .standard:
-            row.padding()
+            row.padding(.horizontal, Iris.Spacing.lg).padding(.vertical, Iris.Spacing.md)
         case .compact:
-            row.padding(.horizontal, 16).padding(.vertical, 9)
+            row.padding(.horizontal, Iris.Spacing.lg).padding(.vertical, Iris.Spacing.sm + 1)
         case .inset:
-            row.padding(.horizontal, 12).padding(.vertical, 7)
+            row.padding(.horizontal, Iris.Spacing.md).padding(.vertical, Iris.Spacing.sm - 1)
         }
     }
 
     private var titleFont: Font {
         switch style {
-        case .standard: return .system(size: 14, weight: .medium)
-        case .compact: return .system(size: 13, weight: .medium)
-        case .inset: return .system(size: 13)
+        case .standard: return Iris.Typography.headline.font
+        case .compact:  return Iris.Typography.body.font
+        case .inset:    return Iris.Typography.body.font
         }
     }
 }

@@ -151,7 +151,7 @@ struct RequiredPermissionsView: View {
                     .foregroundStyle(.orange)
                 Text(missingPermissionsMessage)
                     .font(.system(size: 12))
-                    .foregroundStyle(.white.opacity(0.8))
+                    .foregroundStyle(Iris.Palette.onAccent)
             }
             .padding()
             .background(Color.orange.opacity(0.15))
@@ -1460,8 +1460,8 @@ private struct StorageBreadcrumbBar: View {
                         .buttonStyle(.plain)
                         .padding(.horizontal, 11)
                         .padding(.vertical, 7)
-                        .background(index == pathComponents.count - 1 ? Color.accentColor.opacity(0.22) : Color.white.opacity(0.07), in: Capsule())
-                        .overlay(Capsule().stroke(index == pathComponents.count - 1 ? Color.accentColor.opacity(0.55) : Color.white.opacity(0.10)))
+                        .background(index == pathComponents.count - 1 ? Color.accentColor.opacity(0.22) : Iris.Palette.fillElevated, in: Capsule())
+                        .overlay(Capsule().stroke(index == pathComponents.count - 1 ? Color.accentColor.opacity(0.55) : Iris.Palette.fillElevated))
                     }
                 }
                 .padding(.vertical, 2)
@@ -1513,7 +1513,7 @@ private struct StoragePieSlice: View {
             ZStack {
                 PieSlicePath(start: start, end: end)
                     .fill(color)
-                    .overlay(PieSlicePath(start: start, end: end).stroke(Color.black.opacity(0.35), lineWidth: 1))
+                    .overlay(PieSlicePath(start: start, end: end).stroke(Iris.Palette.fillSunken, lineWidth: 1))
                 let angle = (start + end) / 2 * 2 * .pi - .pi / 2
                 let radius = min(geometry.size.width, geometry.size.height) * 0.36
                 if fraction >= 0.035 {
@@ -1522,7 +1522,7 @@ private struct StoragePieSlice: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .frame(width: fraction < 0.06 ? 48 : 82)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Iris.Palette.textPrimary)
                         .shadow(radius: 2)
                         .clipped()
                         .rotationEffect(.radians(angle + .pi / 2))
@@ -2263,7 +2263,7 @@ struct ClipboardSettingsView: View {
                                 .font(.caption.monospaced())
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(Color.white.opacity(0.07))
+                                .background(Iris.Palette.fillElevated)
                                 .clipShape(Capsule())
                         }
 
@@ -3229,7 +3229,7 @@ struct ShortcutsSettingsView: View {
 
                     TextField("Search Shortcuts", text: $searchText)
                         .textFieldStyle(.plain).padding(8)
-                        .background(Color.black.opacity(0.2)).clipShape(RoundedRectangle(cornerRadius: 8))
+                        .background(Iris.Palette.fillSunken).clipShape(RoundedRectangle(cornerRadius: 8))
                         .padding(.horizontal)
 
                     if fetcher.isLoading {
@@ -3644,7 +3644,7 @@ fileprivate struct IconPickerView: View {
             HStack {
                 Text("Select Icon")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundStyle(Iris.Palette.textPrimary)
                 Spacer()
 
                 Button(action: {
@@ -3677,10 +3677,10 @@ fileprivate struct IconPickerView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
                     TextField("Search icons...", text: $searchText)
-                        .foregroundColor(.white)
+                        .foregroundStyle(Iris.Palette.textPrimary)
                 }
                 .padding(8)
-                .background(Color.white.opacity(0.1))
+                .background(Iris.Palette.fillElevated)
                 .cornerRadius(10)
                 .padding(.horizontal)
                 .padding(.bottom, 10)
@@ -3711,9 +3711,9 @@ fileprivate struct IconPickerView: View {
                                         Image(systemName: symbolName)
                                             .font(.system(size: 24, weight: .bold))
                                             .frame(width: 50, height: 50)
-                                            .background(Color.white.opacity(0.1))
+                                            .background(Iris.Palette.fillElevated)
                                             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                                            .foregroundColor(.white)
+                                            .foregroundStyle(Iris.Palette.textPrimary)
                                     }
                                     .buttonStyle(.plain)
                                 }
@@ -4071,7 +4071,7 @@ private struct WallpaperFileRow: View {
                 if media?.isVideo == true, thumbnail != nil {
                     Image(systemName: "play.fill")
                         .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Iris.Palette.textPrimary)
                         .padding(3)
                         .background(.black.opacity(0.45), in: Circle())
                         .padding(3)
@@ -4838,7 +4838,7 @@ fileprivate struct ModernMenuPicker<T: Identifiable & Hashable>: View {
                 Image(systemName: "chevron.down").font(.caption.bold())
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(Color.white.opacity(0.1))
+            .background(Iris.Palette.fillElevated)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .foregroundColor(.primary)
         }
@@ -4906,7 +4906,7 @@ fileprivate struct ModernMenuPickerWithID<T: Identifiable & Hashable>: View wher
                 Image(systemName: "chevron.down").font(.caption.bold())
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .background(Color.white.opacity(0.1))
+            .background(Iris.Palette.fillElevated)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .foregroundColor(.primary)
         }
@@ -4970,7 +4970,7 @@ fileprivate struct AppPickerView: View {
             TextField("Search Apps", text: $searchText)
                 .textFieldStyle(.plain)
                 .padding()
-                .background(Color.black.opacity(0.1))
+                .background(Iris.Palette.fillSunken)
 
             List(filteredApps) { app in
                 Button(action: { onSelect(app.id) }) {
@@ -5097,7 +5097,7 @@ struct NotificationsSettingsView: View {
                             NotificationToggleRowView(source: source)
                             if source != NotificationSource.allCases.last {
                                 Rectangle()
-                                    .fill(Color.white.opacity(0.2))
+                                    .fill(Iris.Palette.hairline)
                                     .frame(height: 1)
                                     .padding(.leading, 60)
                             }
@@ -5114,7 +5114,7 @@ struct NotificationsSettingsView: View {
                         }
                         .padding(EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20))
 
-                        Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.leading, 60)
+                        Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.leading, 60)
 
                         Text("Allow Notifications From:")
                             .font(.headline)
@@ -5588,7 +5588,7 @@ struct ProximityUnlockSettingsView: View {
                         }
                     }
                     .frame(height: listHeight)
-                    .background(Color.black.opacity(0.1))
+                    .background(Iris.Palette.fillSunken)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
                     .animation(.spring(), value: listHeight)
                 }.padding(.horizontal).animation(.default, value: showUnnamedDevices)
@@ -6627,7 +6627,7 @@ struct DateRangePickerView: View {
             }
         }
         .padding(5)
-        .background(Color.black.opacity(0.15))
+        .background(Iris.Palette.fillSunken)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
@@ -7102,7 +7102,7 @@ struct BatterySpecsCard: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(
-                            (powerModeManager.isLowPowerModeActive ? Color.green.opacity(0.15) : Color.white.opacity(0.08)),
+                            (powerModeManager.isLowPowerModeActive ? Color.green.opacity(0.15) : Iris.Palette.fillElevated),
                             in: Capsule()
                         )
                 }
@@ -7524,7 +7524,7 @@ struct BatteryHistoryView: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.10), Color.white.opacity(0.02), .clear],
+                        colors: [Iris.Palette.fillElevated, Iris.Palette.fillElevated, .clear],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -8036,7 +8036,7 @@ struct BatteryConfigurationView: View {
                     HelperStatusBanner(helperManager: helperManager)
                 }
                 .padding()
-                .roundedCard(fill: Color.black.opacity(0.15), cornerRadius: 20, stroke: Color.white.opacity(0.1))
+                .roundedCard(fill: Iris.Palette.fillSunken, cornerRadius: 20, stroke: Iris.Palette.fillElevated)
                 .onAppear { helperManager.checkIfRunning() }
 
                 notificationsSection
@@ -8941,16 +8941,16 @@ struct MusicSettingsView: View {
 VStack(alignment: .leading, spacing: 8) {
                         Text("Spotify API Credentials").font(.system(size: 14, weight: .medium))
                         Text("Registra tu app en developer.spotify.com y copia aquí estos valores. La URI de redirección es: iris://callback").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
-                        Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8))
+                        Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(Iris.Palette.textSecondary)
                         SecureField("Enter your Client ID", text: Binding(
                             get: { APIKeyManager.shared.spotifyClientId },
                             set: { APIKeyManager.shared.spotifyClientId = $0 }
-                        )).textFieldStyle(.plain).padding(8).background(Color.black.opacity(0.2)).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2)))
-                        Text("Client Secret").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8)).padding(.top, 5)
+                        )).textFieldStyle(.plain).padding(8).background(Iris.Palette.fillSunken).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline))
+                        Text("Client Secret").font(.system(size: 13, weight: .medium)).foregroundStyle(Iris.Palette.textSecondary).padding(.top, 5)
                         SecureField("Enter your Client Secret", text: Binding(
                             get: { APIKeyManager.shared.spotifyClientSecret },
                             set: { APIKeyManager.shared.spotifyClientSecret = $0 }
-                        )).textFieldStyle(.plain).padding(8).background(Color.black.opacity(0.2)).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2)))
+                        )).textFieldStyle(.plain).padding(8).background(Iris.Palette.fillSunken).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline))
                     }.padding().padding(.top, 5)
                     Text("Log in here to enable official features like device switching for Premium users. This is the standard, recommended login method.").font(.caption).foregroundColor(.secondary).padding(.horizontal)
                     Divider().padding(.horizontal, 20)
@@ -8974,16 +8974,16 @@ VStack(alignment: .leading, spacing: 8) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("TIDAL API Credentials").font(.system(size: 14, weight: .medium))
                         Text("Crea una app en developer.tidal.com, habilita los permisos user.read, search.read, collection.read/write y playlists.read/write, y pon la URI de redirección exactamente como iris://callback.").font(.caption).foregroundColor(.secondary).padding(.bottom, 4)
-                        Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8))
+                        Text("Client ID").font(.system(size: 13, weight: .medium)).foregroundStyle(Iris.Palette.textSecondary)
                         SecureField("Enter your Client ID", text: Binding(
                             get: { APIKeyManager.shared.tidalClientId },
                             set: { APIKeyManager.shared.tidalClientId = $0 }
-                        )).textFieldStyle(.plain).padding(8).background(Color.black.opacity(0.2)).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2)))
-                        Text("Client Secret").font(.system(size: 13, weight: .medium)).foregroundStyle(.white.opacity(0.8)).padding(.top, 5)
+                        )).textFieldStyle(.plain).padding(8).background(Iris.Palette.fillSunken).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline))
+                        Text("Client Secret").font(.system(size: 13, weight: .medium)).foregroundStyle(Iris.Palette.textSecondary).padding(.top, 5)
                         SecureField("Enter your Client Secret", text: Binding(
                             get: { APIKeyManager.shared.tidalClientSecret },
                             set: { APIKeyManager.shared.tidalClientSecret = $0 }
-                        )).textFieldStyle(.plain).padding(8).background(Color.black.opacity(0.2)).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2)))
+                        )).textFieldStyle(.plain).padding(8).background(Iris.Palette.fillSunken).clipShape(RoundedRectangle(cornerRadius: 8)).overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline))
                     }.padding().padding(.top, 5)
                     Text("Log in here to enable TIDAL features like catalog search and syncing liked tracks and playlists. Requires a TIDAL developer account (third-party access tier).").font(.caption).foregroundColor(.secondary).padding(.horizontal)
                     Divider().padding(.horizontal, 20)
@@ -9217,7 +9217,7 @@ struct WeatherSettingsView: View {
                     }
                     .padding()
 
-                    Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.leading, 20)
+                    Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.leading, 20)
 
                     HStack {
                         Text("Use Metric Units")
@@ -9227,7 +9227,7 @@ struct WeatherSettingsView: View {
                     }
                     .padding()
 
-                    Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.leading, 20)
+                    Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.leading, 20)
 
                     HStack {
                         Text("Open detailed Weather widget on live activity click")
@@ -9300,7 +9300,7 @@ struct CalendarSettingsView: View {
                     }
                     .padding()
 
-                    Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.leading, 20)
+                    Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.leading, 20)
 
                     HStack {
                         Text("Start Week On")
@@ -9315,7 +9315,7 @@ struct CalendarSettingsView: View {
                     }
                     .padding()
 
-                    Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.leading, 20)
+                    Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.leading, 20)
 
                     ToggleRow(
                         title: "Open Calendar on Click",
@@ -9516,7 +9516,7 @@ struct EyeBreakSettingsView: View {
                             eyeBreakManager.completeBreak()
                         }
                         .buttonStyle(.borderless)
-                        .foregroundColor(.white)
+                        .foregroundStyle(Iris.Palette.onAccent)
                         .padding(8)
                         .background(Color.blue)
                         .cornerRadius(8)
@@ -10048,7 +10048,7 @@ struct NeardropSettingsView: View {
                         }
                         .padding(EdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20))
 
-                        Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.horizontal, 20)
+                        Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.horizontal, 20)
 
                         InfoContainer(
                             text: "Nearby Share allows you to share files from Android phones to your Mac using Android's native file sharing (Nearby Share / Quick Share). It's recommended to keep this feature enabled for convenient sharing from family and friends.",
@@ -10061,16 +10061,16 @@ struct NeardropSettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Device Display Name")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Iris.Palette.textPrimary)
 
                                 TextField("My Mac", text: $settings.settings.neardropDeviceDisplayName)
                                     .textFieldStyle(.plain)
                                     .padding(.vertical, 8)
                                     .padding(.horizontal, 12)
-                                    .background(Color.black.opacity(0.2))
+                                    .background(Iris.Palette.fillSunken)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.2), lineWidth: 1))
-                                    .foregroundStyle(.white)
+                                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline, lineWidth: 1))
+                                    .foregroundStyle(Iris.Palette.textPrimary)
                                     .font(.system(size: 13))
                                     .disabled(!settings.settings.neardropEnabled)
                             }
@@ -10078,12 +10078,12 @@ struct NeardropSettingsView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Download Location")
                                     .font(.system(size: 14, weight: .medium))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Iris.Palette.textPrimary)
 
                                 HStack {
                                     TextField("Path", text: $downloadPath, onCommit: validateAndSavePath)
                                         .textFieldStyle(.plain)
-                                        .foregroundStyle(.white)
+                                        .foregroundStyle(Iris.Palette.textPrimary)
                                         .font(.system(size: 13))
                                         .disabled(!settings.settings.neardropEnabled)
 
@@ -10092,9 +10092,9 @@ struct NeardropSettingsView: View {
                                 }
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 12)
-                                .background(Color.black.opacity(0.2))
+                                .background(Iris.Palette.fillSunken)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(isPathValid ? Color.white.opacity(0.2) : Color.red, lineWidth: 1))
+                                .overlay(RoundedRectangle(cornerRadius: 8).stroke(isPathValid ? Iris.Palette.hairline : Color.red, lineWidth: 1))
 
                                 if !isPathValid {
                                     Text("A valid directory is required.")
@@ -10106,7 +10106,7 @@ struct NeardropSettingsView: View {
                         .padding([.horizontal, .bottom], 20)
                         .opacity(settings.settings.neardropEnabled ? 1.0 : 0.5)
 
-                        Rectangle().fill(Color.white.opacity(0.2)).frame(height: 1).padding(.horizontal, 20)
+                        Rectangle().fill(Iris.Palette.hairline).frame(height: 1).padding(.horizontal, 20)
 
                         HStack {
                             Text("Open detailed AirDrop widget on live activity click")
@@ -10233,7 +10233,7 @@ struct AboutSettingsView: View {
                             if debugMode.isEnabled {
                                 Image(systemName: "hammer.fill")
                                     .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Iris.Palette.onAccent)
                                     .padding(6)
                                     .background(Circle().fill(Color.orange))
                                     .offset(x: 6, y: 6)
@@ -10254,12 +10254,12 @@ struct AboutSettingsView: View {
                         }
 
                         HStack(spacing: 10) {
-                            Link(destination: URL(string: "https://sapphire-app.tech/")!) {
+                            Link(destination: URL(string: "https://github.com/Carrillooo/copiamejoradasapphire")!) {
                                 Image(systemName: "link")
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 18, height: 18)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(Iris.Palette.onAccent)
                                     .padding(6)
                                     .background(Color.blue)
                                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -10272,7 +10272,7 @@ struct AboutSettingsView: View {
                                     .renderingMode(.template)
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 18, height: 18)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(Iris.Palette.onAccent)
                                     .padding(6)
                                     .background(Color.black)
                                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -10651,7 +10651,7 @@ struct ModernUpdateStatusView: View {
                             Text("Download Update")
                         }
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Iris.Palette.onAccent)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                         .background(Color.accentColor.gradient)
@@ -10690,7 +10690,7 @@ struct ModernUpdateStatusView: View {
                             Text("Install and Relaunch")
                         }
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Iris.Palette.onAccent)
                         .padding(.horizontal, 20)
                         .padding(.vertical, 10)
                         .background(Color.green.gradient)
@@ -10886,7 +10886,7 @@ struct ModernChannelSwitcher: View {
                     .opacity(isLockedToRunningBuild && channel != selection ? 0.35 : ((channel == .beta && !hasBetaAccess) ? 0.4 : 1))
             }
         }
-        .background(Color.white.opacity(0.08))
+        .background(Iris.Palette.fillElevated)
         .clipShape(Capsule())
         .opacity(isLockedToRunningBuild ? 0.85 : 1)
     }
@@ -11676,11 +11676,11 @@ private struct MenuBarSpaceBindingsEditor: View {
                                 .frame(width: 32, height: 28)
                                 .background(
                                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                        .fill(isBound ? Color.accentColor.opacity(0.25) : Color.white.opacity(0.06))
+                                        .fill(isBound ? Color.accentColor.opacity(0.25) : Iris.Palette.fillElevated)
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 7, style: .continuous)
-                                        .stroke(isBound ? Color.accentColor : Color.white.opacity(0.12), lineWidth: 1)
+                                        .stroke(isBound ? Color.accentColor : Iris.Palette.fillElevated, lineWidth: 1)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -12162,7 +12162,7 @@ struct ModernSegmentedPicker: View {
             }
         }
         .padding(6)
-        .background(Color.black.opacity(0.15))
+        .background(Iris.Palette.fillSunken)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
@@ -12206,9 +12206,9 @@ struct IntelligenceRunnerView: View {
                 TextField("Describe a task...", text: $vm.taskInput)
                     .textFieldStyle(.plain)
                     .padding(8)
-                    .background(Color.black.opacity(0.2))
+                    .background(Iris.Palette.fillSunken)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.white.opacity(0.15)))
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(Iris.Palette.hairline))
                     .onSubmit {
                         if !vm.isRunning && !isLaunchDisabled {
                             let activeKey = backend.resolveAPIKey(fallbackGeminiKey: apiKey)
@@ -12239,7 +12239,7 @@ struct IntelligenceRunnerView: View {
                         )
                     } label: {
                         Image(systemName: "play.fill")
-                            .foregroundStyle(.white)
+                            .foregroundStyle(Iris.Palette.onAccent)
                     }
                     .buttonStyle(.plain)
                     .frame(width: 32, height: 32)
@@ -12275,9 +12275,9 @@ struct IntelligenceRunnerView: View {
                         ))
                         .textFieldStyle(.plain)
                         .padding(6)
-                        .background(Color.black.opacity(0.2))
+                        .background(Iris.Palette.fillSunken)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.white.opacity(0.12)))
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Iris.Palette.fillElevated))
 
                         TextField("Model Name", text: Binding(
                             get: { UserDefaults.standard.string(forKey: "hackClubModel") ?? "qwen/qwen3-32b" },
@@ -12285,9 +12285,9 @@ struct IntelligenceRunnerView: View {
                         ))
                         .textFieldStyle(.plain)
                         .padding(6)
-                        .background(Color.black.opacity(0.2))
+                        .background(Iris.Palette.fillSunken)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color.white.opacity(0.12)))
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Iris.Palette.fillElevated))
                     }
                 }
                 .padding(.top, 4)
@@ -12337,7 +12337,7 @@ struct IntelligenceRunnerView: View {
                     .padding(8)
                 }
                 .frame(maxHeight: 140)
-                .background(Color.black.opacity(0.25))
+                .background(Iris.Palette.fillSunken)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
         }
@@ -12578,9 +12578,9 @@ struct FocusSessionSettingsView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "shield.lefthalf.filled")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Iris.Palette.textPrimary)
                         .frame(width: 20, height: 20)
-                        .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 5))
+                        .background(Iris.Palette.fillElevated, in: RoundedRectangle(cornerRadius: 5))
                     Text("Blocking Intensity")
                         .font(.system(size: 12, weight: .semibold))
                 }
@@ -12631,7 +12631,7 @@ struct FocusSessionSettingsView: View {
                         .padding(.vertical, 8)
                         .background(
                             RoundedRectangle(cornerRadius: 9, style: .continuous)
-                                .fill(settings.settings.focusIntensity == level ? Color.green.opacity(0.12) : Color.white.opacity(0.05))
+                                .fill(settings.settings.focusIntensity == level ? Color.green.opacity(0.12) : Iris.Palette.fillElevated)
                         )
                     }
                     .buttonStyle(.plain)
@@ -12874,7 +12874,7 @@ struct FocusSessionSettingsView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 8))
+                .background(Iris.Palette.fillElevated, in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 16).padding(.bottom, 12)
@@ -12884,9 +12884,9 @@ struct FocusSessionSettingsView: View {
             HStack(spacing: 8) {
                 Image(systemName: "link.icloud")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Iris.Palette.textPrimary)
                     .frame(width: 20, height: 20)
-                    .background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 5))
+                    .background(Iris.Palette.fillElevated, in: RoundedRectangle(cornerRadius: 5))
                 Text("System Clock & Shortcuts")
                     .font(.system(size: 12, weight: .semibold))
             }
@@ -13065,7 +13065,7 @@ struct FocusSessionSettingsView: View {
             Button(action: onRemove) { Image(systemName: "xmark.circle.fill").font(.caption) }.buttonStyle(.plain)
         }
         .padding(.horizontal, 8).padding(.vertical, 4)
-        .background(Color.white.opacity(0.08), in: Capsule())
+        .background(Iris.Palette.fillElevated, in: Capsule())
     }
 }
 
@@ -13258,7 +13258,7 @@ private struct AddFocusScheduleView: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 28)
                 .background(
-                    isOn ? Color.green : Color.white.opacity(0.08),
+                    isOn ? Color.green : Iris.Palette.fillElevated,
                     in: Capsule()
                 )
         }        .buttonStyle(.plain)

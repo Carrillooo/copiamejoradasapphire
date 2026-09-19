@@ -85,6 +85,20 @@ public extension Iris {
         public static let surfaceSunken = dynamic(light: srgb(238, 238, 243),
                                                   dark:  srgb(12, 12, 15))
 
+        /// Relleno sutil para elevar un elemento sobre su superficie. Sustituye
+        /// a los `Color.white.opacity(0.06…0.12)` sueltos, que en apariencia
+        /// clara eran blanco sobre blanco, es decir, invisibles.
+        public static let fillElevated = dynamic(light: srgb(0, 0, 0, 0.05),
+                                                 dark:  srgb(255, 255, 255, 0.07))
+        /// Relleno hundido, para pozos y campos. Sustituye a los
+        /// `Color.black.opacity(0.15…0.2)`, que en clara eran un velo gris.
+        public static let fillSunken = dynamic(light: srgb(0, 0, 0, 0.045),
+                                               dark:  srgb(0, 0, 0, 0.28))
+        /// Contenido sobre un relleno de color saturado (insignias, degradados).
+        /// Aquí el blanco sí es correcto, y conviene que se note que es
+        /// deliberado y no un color fijo olvidado.
+        public static let onAccent = Color.white
+
         // --- Bordes --------------------------------------------------------
         /// El borde superior claro simula la luz que engancha el canto del
         /// material. Con «aumentar contraste» se vuelve un borde definido.
