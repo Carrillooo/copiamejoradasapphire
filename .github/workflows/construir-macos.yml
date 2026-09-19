@@ -21,6 +21,8 @@ on:
     paths-ignore:
       - "**/*.md"
       - "DOCS-ES/**"
+      - "previews/**"
+      - "Tools/IrisPreview/**"
 
 permissions:
   contents: read
