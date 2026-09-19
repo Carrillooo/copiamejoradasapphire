@@ -414,3 +414,117 @@ public struct IrisSwitchToggleStyle: ToggleStyle {
 public extension ToggleStyle where Self == IrisSwitchToggleStyle {
     static var irisSwitch: IrisSwitchToggleStyle { IrisSwitchToggleStyle() }
 }
+
+// MARK: - El notch
+
+/// El notch tiene reglas propias y no son las de una ventana.
+///
+/// · La superficie es negra SIEMPRE, porque se apoya en el bisel físico. El
+///   texto va en claro con independencia de la apariencia del sistema; usar
+///   aquí la paleta normal dejaría texto oscuro sobre negro.
+/// · Se lee de un vistazo, de pasada y desde lejos. Nada de texto que se
+///   encoja para caber: si no cabe, es que no debía estar ahí.
+/// · Un estado vacío es una etiqueta, no una frase. Una explicación larga
+///   convertida en microtexto no la lee nadie, y encima ocupa el sitio de lo
+///   que sí importa.
+public extension Iris {
+    enum Notch {
+        // --- Texto ------------------------------------------------------
+        public static let textPrimary = Color.white
+        public static let textSecondary = Color.white.opacity(0.72)
+        public static let textTertiary = Color.white.opacity(0.45)
+
+        /// Relleno para pastillas e insignias dentro del notch.
+        public static let fill = Color.white.opacity(0.10)
+        public static let hairline = Color.white.opacity(0.14)
+
+        // --- Métricas ---------------------------------------------------
+        /// Alto útil de la fila de widgets. Todos miden lo mismo: es lo que
+        /// hace que la fila se lea como una fila y no como cosas sueltas.
+        public static let rowHeight: CGFloat = 86
+        /// Separación entre widgets contiguos.
+        public static let gutter: CGFloat = Iris.Spacing.xl
+        /// Margen interior de cada widget.
+        public static let inset: CGFloat = Iris.Spacing.md
+
+        // --- Tipografía -------------------------------------------------
+        /// La cifra grande de un widget (temperatura, hora, porcentaje).
+        public static let metric = TextStyle(size: 30, weight: .semibold, tracking: -0.6,
+                                             lineSpacing: 0, design: .rounded)
+        /// El nombre de lo que se muestra.
+        public static let label = TextStyle(size: 13, weight: .medium, tracking: -0.05,
+                                            lineSpacing: 0, design: .default)
+        /// El detalle secundario.
+        public static let detail = TextStyle(size: 11, weight: .regular, tracking: 0.1,
+                                             lineSpacing: 0, design: .default)
+        /// Cifras pequeñas alineadas en columna (viento, humedad…).
+        public static let readout = TextStyle(size: 12, weight: .semibold, tracking: 0,
+                                              lineSpacing: 0, design: .rounded)
+    }
+}
+
+/// Estado «sin datos» de un widget del notch: un icono, una etiqueta corta y,
+/// si hay algo que hacer, una pista de una línea. Nunca un párrafo.
+public struct IrisNotchEmptyState: View {
+    let systemImage: String
+    let title: String
+    var hint: String? = nil
+
+    public init(systemImage: String, title: String, hint: String? = nil) {
+        self.systemImage = systemImage
+        self.title = title
+        self.hint = hint
+    }
+
+    public var body: some View {
+        HStack(spacing: Iris.Spacing.md) {
+            Image(systemName: systemImage)
+                .font(.system(size: 22, weight: .regular))
+                .foregroundStyle(Iris.Notch.textTertiary)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title)
+                    .irisText(Iris.Notch.label, color: Iris.Notch.textSecondary)
+                if let hint {
+                    Text(hint)
+                        .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary)
+                        .lineLimit(1)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// Una lectura pequeña del notch: icono a ancho fijo y cifra.
+///
+/// El ancho fijo del icono es lo que hace que varias lecturas en columna
+/// caigan en la misma vertical; sin él la columna se lee en zigzag. Las cifras
+/// van monoespaciadas para que no bailen al cambiar.
+public struct IrisNotchReadout: View {
+    let icon: String
+    let value: String
+    var tint: Color? = nil
+
+    public init(icon: String, value: String, tint: Color? = nil) {
+        self.icon = icon
+        self.value = value
+        self.tint = tint
+    }
+
+    public var body: some View {
+        HStack(spacing: Iris.Spacing.sm) {
+            Image(systemName: icon)
+                .font(.system(size: 11, weight: .medium))
+                .symbolRenderingMode(.hierarchical)
+                .foregroundStyle(tint ?? Iris.Notch.textTertiary)
+                .frame(width: 14, alignment: .center)
+
+            Text(value)
+                .irisText(Iris.Notch.readout, color: tint ?? Iris.Notch.textSecondary)
+                .lineLimit(1)
+                .monospacedDigit()
+        }
+        .id(value)
+        .transition(.opacity)
+    }
+}

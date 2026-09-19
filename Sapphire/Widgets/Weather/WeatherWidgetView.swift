@@ -1,8 +1,21 @@
 //
 //  WeatherWidgetView.swift
-//  Sapphire
+//  Iris
 //
-//  Created by Shariq Charolia on 2025-10-05
+//  Reconstruido sobre la capa de notch del sistema de diseño
+//  (Sapphire/Iris/IrisDesignSystem.swift → Iris.Notch).
+//
+//  Qué iba mal en la versión anterior:
+//
+//  · Tamaños inventados: 44, 42, .headline, .subheadline, .callout, y
+//    espaciados 10/8/2/4/5. Cada widget elegía los suyos, así que la fila del
+//    notch no compartía ningún ritmo y se leía como cosas sueltas.
+//  · Sin ubicación, `conditionDescription` ES la frase "Grant Location access
+//    in ... Permissions settings to show weather.", y se pintaba con
+//    lineLimit(1) + minimumScaleFactor(0.7): un párrafo encogido hasta ser
+//    ilegible, ocupando el sitio de lo que sí importa.
+//  · `.preferredColorScheme(.dark)` forzado sobre una superficie que ya es
+//    negra: no hacía falta, y arrastraba el resto de la jerarquía.
 //
 
 import SwiftUI
@@ -11,87 +24,81 @@ struct WeatherWidgetView: View {
     @Environment(\.navigationStack) var navigationStack
     @ObservedObject private var viewModel = WeatherViewModel.shared
 
+    /// Sin datos no hay nada que enseñar: se muestra el estado vacío corto en
+    /// lugar de rellenar los huecos con guiones.
+    private var sinDatos: Bool { viewModel.weatherData == nil }
+
     var body: some View {
-        ZStack {
-            HStack(alignment: .center, spacing: 10) {
-                primaryInfo.layoutPriority(1)
-                secondaryInfo
+        Group {
+            if sinDatos {
+                IrisNotchEmptyState(
+                    systemImage: "location.slash",
+                    title: "Tiempo no disponible",
+                    hint: "Permite la ubicación en Ajustes"
+                )
+            } else {
+                contenido
             }
-            .padding(.horizontal, 10)
         }
-        .padding(.top, 0)
-        .frame(minWidth: 200, minHeight: 90)
-        .fixedSize()
-        .foregroundColor(.white)
-        .preferredColorScheme(.dark)
+        .frame(height: Iris.Notch.rowHeight)
+        .padding(.horizontal, Iris.Notch.inset)
         .contentShape(Rectangle())
         .onTapGesture {
-            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+            withAnimation(Iris.Motion.standard) {
                 navigationStack.wrappedValue.append(.weatherPlayer)
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            sinDatos
+            ? "Tiempo no disponible. Permite la ubicación en Ajustes."
+            : "\(viewModel.temperature), \(viewModel.conditionDescription), \(viewModel.locationName)"
+        )
     }
 
-    private var primaryInfo: some View {
-        HStack(spacing: 8) {
+    private var contenido: some View {
+        HStack(alignment: .center, spacing: Iris.Spacing.lg) {
             Image(systemName: viewModel.iconName)
-                .font(.system(size: 44))
+                .font(.system(size: 34))
                 .symbolRenderingMode(.multicolor)
-                .shadow(radius: 2)
-                .minimumScaleFactor(0.8)
+                .frame(width: 40)
                 .id(viewModel.iconName)
                 .transition(.opacity)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Text(viewModel.temperature)
-                    .font(.system(size: 42, weight: .bold, design: .rounded))
-                    .minimumScaleFactor(0.5)
+                    .irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
                     .id(viewModel.temperature)
                     .transition(.opacity)
 
-                Text(viewModel.locationName)
-                    .font(.headline).fontWeight(.medium).lineLimit(1).minimumScaleFactor(0.7)
-                    .id(viewModel.locationName)
-                    .transition(.opacity)
-
                 Text(viewModel.conditionDescription)
-                    .font(.subheadline).opacity(0.8).lineLimit(1).minimumScaleFactor(0.7)
+                    .irisText(Iris.Notch.label, color: Iris.Notch.textSecondary)
+                    .lineLimit(1)
                     .id(viewModel.conditionDescription)
                     .transition(.opacity)
+
+                Text(viewModel.locationName)
+                    .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary)
+                    .lineLimit(1)
+                    .id(viewModel.locationName)
+                    .transition(.opacity)
             }
-            .animation(.easeInOut(duration: 0.4), value: viewModel.locationName)
+            .layoutPriority(1)
+
+            lecturas
         }
+        .animation(Iris.Motion.standard, value: viewModel.locationName)
     }
 
-    private var secondaryInfo: some View {
-        VStack(alignment: .trailing, spacing: 4) {
-            CompactInfoRow(iconName: "wind", value: viewModel.windInfo)
-            CompactInfoRow(iconName: "drop.fill", value: viewModel.precipChance)
-            CompactInfoRow(iconName: "humidity.fill", value: viewModel.humidity)
+    /// Columna de lecturas. Alineadas a la izquierda y con los iconos a ancho
+    /// fijo, para que las cifras caigan en la misma vertical y la columna se
+    /// lea de un golpe en vez de en zigzag.
+    private var lecturas: some View {
+        VStack(alignment: .leading, spacing: Iris.Spacing.xs) {
+            IrisNotchReadout(icon: "wind", value: viewModel.windInfo)
+            IrisNotchReadout(icon: "drop.fill", value: viewModel.precipChance)
+            IrisNotchReadout(icon: "humidity.fill", value: viewModel.humidity)
         }
-        .animation(.easeInOut(duration: 0.4), value: viewModel.windInfo)
-    }
-}
-
-struct CompactInfoRow: View {
-    let iconName: String
-    let value: String
-
-    var body: some View {
-        HStack(spacing: 5) {
-            Image(systemName: iconName)
-                .font(.callout)
-                .frame(width: 20)
-                .symbolRenderingMode(.hierarchical)
-                .opacity(0.8)
-
-            Text(value)
-                .font(.system(.subheadline, design: .rounded))
-                .fontWeight(.semibold)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-        }
-        .id(value)
-        .transition(.opacity)
+        .animation(Iris.Motion.standard, value: viewModel.windInfo)
     }
 }

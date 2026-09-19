@@ -218,6 +218,104 @@ private struct IrisSpecimen: View {
     }
 }
 
+
+// MARK: - La fila del notch
+
+/// Réplica de la fila de widgets del notch con datos fijos. Usa las mismas
+/// primitivas (Iris.Notch) que los widgets reales, así que sirve para juzgar
+/// métricas, jerarquía y estados vacíos sin arrastrar los view models.
+private struct NotchSpecimen: View {
+    var body: some View {
+        VStack(spacing: Iris.Spacing.xl) {
+            fila("Con datos") {
+                tiempo(sinDatos: false)
+                divisor
+                concentracion
+            }
+            fila("Sin datos — el caso que salía mal") {
+                tiempo(sinDatos: true)
+                divisor
+                IrisNotchEmptyState(systemImage: "calendar",
+                                    title: "Sin eventos",
+                                    hint: "Nada más por hoy")
+                    .frame(height: Iris.Notch.rowHeight)
+            }
+        }
+        .padding(Iris.Spacing.xl)
+        .frame(width: 980)
+        .background(Color.black)
+    }
+
+    private var divisor: some View {
+        Rectangle().fill(Iris.Notch.hairline).frame(width: 1, height: 44)
+    }
+
+    private func fila<C: View>(_ titulo: String, @ViewBuilder _ c: () -> C) -> some View {
+        VStack(alignment: .leading, spacing: Iris.Spacing.sm) {
+            Text(titulo)
+                .irisText(Iris.Typography.caption, color: Iris.Notch.textTertiary)
+            HStack(spacing: Iris.Notch.gutter) { c(); Spacer() }
+                .frame(height: Iris.Notch.rowHeight)
+                .padding(.horizontal, Iris.Spacing.lg)
+                .background(Color.black)
+        }
+    }
+
+    @ViewBuilder
+    private func tiempo(sinDatos: Bool) -> some View {
+        if sinDatos {
+            IrisNotchEmptyState(systemImage: "location.slash",
+                                title: "Tiempo no disponible",
+                                hint: "Permite la ubicación en Ajustes")
+                .frame(height: Iris.Notch.rowHeight)
+        } else {
+            HStack(alignment: .center, spacing: Iris.Spacing.lg) {
+                Image(systemName: "cloud.sun.fill")
+                    .font(.system(size: 34))
+                    .symbolRenderingMode(.multicolor)
+                    .frame(width: 40)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("18°").irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
+                    Text("Parcialmente nublado")
+                        .irisText(Iris.Notch.label, color: Iris.Notch.textSecondary).lineLimit(1)
+                    Text("Madrid")
+                        .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary).lineLimit(1)
+                }
+                VStack(alignment: .leading, spacing: Iris.Spacing.xs) {
+                    IrisNotchReadout(icon: "wind", value: "12 km/h")
+                    IrisNotchReadout(icon: "drop.fill", value: "20 %")
+                    IrisNotchReadout(icon: "humidity.fill", value: "54 %")
+                }
+            }
+            .frame(height: Iris.Notch.rowHeight)
+        }
+    }
+
+    private var concentracion: some View {
+        HStack(alignment: .center, spacing: Iris.Spacing.lg) {
+            Image(systemName: "moon.fill")
+                .font(.system(size: 30))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(LinearGradient(colors: [.purple, .indigo],
+                                                startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 40)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Concentración").irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
+                Text("Listo para empezar")
+                    .irisText(Iris.Notch.label, color: Iris.Notch.textSecondary)
+                Text("90 min · 00:00 hoy")
+                    .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary)
+            }
+            VStack(alignment: .leading, spacing: Iris.Spacing.xs) {
+                IrisNotchReadout(icon: "flame.fill", value: "0 días seguidos", tint: .orange)
+                IrisNotchReadout(icon: "sun.max.fill", value: "00:00")
+                IrisNotchReadout(icon: "checkmark.seal.fill", value: "0 sesiones")
+            }
+        }
+        .frame(height: Iris.Notch.rowHeight)
+    }
+}
+
 // MARK: - Render
 
 @MainActor
@@ -248,5 +346,7 @@ try? FileManager.default.createDirectory(at: outDir, withIntermediateDirectories
 MainActor.assumeIsolated {
     render(IrisSpecimen(), appearanceName: .aqua, to: outDir.appendingPathComponent("iris-claro.png"))
     render(IrisSpecimen(), appearanceName: .darkAqua, to: outDir.appendingPathComponent("iris-oscuro.png"))
+    // El notch es negro siempre: una sola captura basta.
+    render(NotchSpecimen(), appearanceName: .darkAqua, to: outDir.appendingPathComponent("iris-notch.png"))
 }
 print("Listo.")

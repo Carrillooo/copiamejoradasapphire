@@ -18,8 +18,8 @@ struct FocusWidgetView: View {
     }
 
     private var phaseLabel: String {
-        if focusManager.isPaused { return "PAUSED" }
-        return focusManager.isFocusBlock ? "FOCUS" : "BREAK"
+        if focusManager.isPaused { return "EN PAUSA" }
+        return focusManager.isFocusBlock ? "CONCENTRACIÓN" : "DESCANSO"
     }
 
     private var blockedCount: Int {
@@ -35,20 +35,20 @@ struct FocusWidgetView: View {
             }
         } label: {
             ZStack {
-                HStack(alignment: .center, spacing: 10) {
+                HStack(alignment: .center, spacing: Iris.Spacing.lg) {
                     primaryInfo.layoutPriority(1)
                     secondaryInfo
                 }
-                .padding(.horizontal, 10)
+                .padding(.horizontal, Iris.Notch.inset)
             }
         }
         .buttonStyle(.plain)
-        .frame(minWidth: 200, minHeight: 90)
-        .fixedSize()
-        .foregroundColor(.white)
-        .preferredColorScheme(.dark)
+        // Mismo alto e interior que el resto de widgets del notch: es lo que
+        // hace que la fila se lea como una fila. Sin .preferredColorScheme:
+        // la superficie ya es negra y los colores salen de Iris.Notch.
+        .frame(height: Iris.Notch.rowHeight)
         .contentShape(Rectangle())
-        .animation(.default, value: focusManager.phase)
+        .animation(Iris.Motion.standard, value: focusManager.phase)
     }
 
     // MARK: - Primary readout
@@ -72,27 +72,28 @@ struct FocusWidgetView: View {
                     .shadow(radius: 2)
             }
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 1) {
                 Group {
                     if focusManager.isSessionActive {
                         FocusWidgetCountdownText(focusManager: focusManager)
                     } else {
-                        Text("Focus")
+                        Text("Concentración")
                     }
                 }
-                .font(.system(size: 30, weight: .bold, design: .rounded))
-                .minimumScaleFactor(0.5)
+                .irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
                 .lineLimit(1)
-                .animation(.easeInOut(duration: 0.4), value: focusManager.isSessionActive)
+                .animation(Iris.Motion.standard, value: focusManager.isSessionActive)
 
-                Text(focusManager.isSessionActive ? phaseLabel : "Ready to focus")
-                    .font(.headline).fontWeight(.medium).lineLimit(1).minimumScaleFactor(0.7)
-                    .foregroundColor(focusManager.isSessionActive ? accent : .secondary)
+                Text(focusManager.isSessionActive ? phaseLabel : "Listo para empezar")
+                    .irisText(Iris.Notch.label,
+                              color: focusManager.isSessionActive ? accent : Iris.Notch.textSecondary)
+                    .lineLimit(1)
 
                 Text(focusManager.isSessionActive
-                     ? (blockedCount > 0 ? "Blocking \(blockedCount) distraction\(blockedCount == 1 ? "" : "s")" : "No distractions blocked")
-                     : "\(Int(settings.settings.focusSessionDuration / 60))m · \(FocusSessionManager.format(focusManager.completedToday)) today")
-                    .font(.subheadline).opacity(0.8).lineLimit(1).minimumScaleFactor(0.7)
+                     ? (blockedCount > 0 ? "Bloqueando \(blockedCount) distracción\(blockedCount == 1 ? "" : "es")" : "Sin bloqueos")
+                     : "\(Int(settings.settings.focusSessionDuration / 60)) min · \(FocusSessionManager.format(focusManager.completedToday)) hoy")
+                    .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary)
+                    .lineLimit(1)
             }
         }
     }
@@ -100,30 +101,31 @@ struct FocusWidgetView: View {
     // MARK: - Secondary stats (streak leads)
 
     private var secondaryInfo: some View {
-        VStack(alignment: .trailing, spacing: 4) {
+        // Alineada a la izquierda, como en el resto de widgets: con los
+        // iconos a ancho fijo las cifras caen en la misma vertical.
+        VStack(alignment: .leading, spacing: Iris.Spacing.xs) {
             streakRow
-            CompactInfoRow(iconName: "sun.max.fill", value: FocusSessionManager.format(focusManager.completedToday))
-            CompactInfoRow(
-                iconName: focusManager.isSessionActive ? "square.stack.3d.up.fill" : "checkmark.seal.fill",
+            IrisNotchReadout(icon: "sun.max.fill",
+                             value: FocusSessionManager.format(focusManager.completedToday))
+            IrisNotchReadout(
+                icon: focusManager.isSessionActive ? "square.stack.3d.up.fill" : "checkmark.seal.fill",
                 value: focusManager.isSessionActive
-                    ? "\(focusManager.blocksCompletedThisSession) blocks"
-                    : "\(focusManager.history.count) sessions"
+                    ? "\(focusManager.blocksCompletedThisSession) bloques"
+                    : "\(focusManager.history.count) sesiones"
             )
         }
-        .animation(.easeInOut(duration: 0.4), value: focusManager.isSessionActive)
-        .animation(.default, value: focusManager.currentStreak)
+        .animation(Iris.Motion.standard, value: focusManager.isSessionActive)
+        .animation(Iris.Motion.standard, value: focusManager.currentStreak)
     }
 
     private var streakRow: some View {
-        HStack(spacing: 5) {
-            StreakFlame(size: 20, isActive: focusManager.currentStreak > 0)
+        HStack(spacing: Iris.Spacing.sm) {
+            StreakFlame(size: 14, isActive: focusManager.currentStreak > 0)
+                .frame(width: 14, alignment: .center)
 
             Text(streakText)
-                .font(.system(.subheadline, design: .rounded))
-                .fontWeight(.bold)
-                .foregroundColor(.orange)
+                .irisText(Iris.Notch.readout, color: .orange)
                 .lineLimit(1)
-                .minimumScaleFactor(0.7)
         }
         .id(streakText)
         .transition(.opacity)
@@ -131,7 +133,7 @@ struct FocusWidgetView: View {
 
     private var streakText: String {
         let s = focusManager.currentStreak
-        return s == 1 ? "1 day streak" : "\(s) day streak"
+        return s == 1 ? "1 día seguido" : "\(s) días seguidos"
     }
 }
 
