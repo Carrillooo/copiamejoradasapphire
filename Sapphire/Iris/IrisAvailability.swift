@@ -20,7 +20,7 @@
 
 import Foundation
 
-public extension Iris {
+extension Iris {
     enum Availability {
         /// Secciones de ajustes cuya pantalla es un stub de una a ocho líneas.
         static let hiddenSettingsSections: Set<SettingsSection> = [
@@ -52,7 +52,7 @@ public extension Iris {
     }
 }
 
-public extension SettingsSection {
+extension SettingsSection {
     /// Secciones que esta edición muestra. Sustituye a `allCases` en la interfaz.
     static var availableCases: [SettingsSection] {
         allCases.filter { !Iris.Availability.hiddenSettingsSections.contains($0) }
@@ -62,7 +62,7 @@ public extension SettingsSection {
     }
 }
 
-public extension WidgetType {
+extension WidgetType {
     static var availableCases: [WidgetType] {
         allCases.filter { !Iris.Availability.hiddenWidgets.contains($0) }
     }
@@ -71,7 +71,7 @@ public extension WidgetType {
     }
 }
 
-public extension LiveActivityType {
+extension LiveActivityType {
     static var availableCases: [LiveActivityType] {
         allCases.filter { !Iris.Availability.hiddenLiveActivities.contains($0) }
     }
