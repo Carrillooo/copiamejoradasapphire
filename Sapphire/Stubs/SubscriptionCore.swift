@@ -43,7 +43,8 @@ public struct SubscriptionEntitlements: Codable, Equatable {
 }
 
 public enum SubscriptionFeatureCatalog {
-    public static func features(for tier: SubscriptionTier) -> Set<AppFeature> { [] }
+    /// Edición personal: no hay planes. Todo el catálogo, en cualquier nivel.
+    public static func features(for tier: SubscriptionTier) -> Set<AppFeature> { Set(AppFeature.allCases) }
     public static func minimumTier(for feature: AppFeature) -> SubscriptionTier { .free }
     public static func tierDisplayName(_ tier: SubscriptionTier) -> String { tier.rawValue.capitalized }
     public static func marketingSubtitle(for tier: SubscriptionTier) -> String { "Includes the core Sapphire experience." }
@@ -58,9 +59,11 @@ public enum SubscriptionFeatureCatalog {
 }
 
 public enum SubscriptionAccess {
-    public static func hasAccess(to feature: AppFeature) -> Bool { false }
-    public static func resolvedTier() -> SubscriptionTier { .free }
-    public static func intelligenceDailyRunLimit() -> Int { 8 }
+    /// Sin suscripciones ni niveles: nada está bloqueado.
+    public static func hasAccess(to feature: AppFeature) -> Bool { true }
+    public static func resolvedTier() -> SubscriptionTier { .ultra }
+    /// Sin cuota diaria.
+    public static func intelligenceDailyRunLimit() -> Int { .max }
 }
 
 public final class SubscriptionManager: ObservableObject {
@@ -68,18 +71,19 @@ public final class SubscriptionManager: ObservableObject {
 
     public var tierGradientColors: [Color] { [.gray, .gray.opacity(0.6)] }
     public var userInitials: String { "G" }
-    public var tierLabel: String { "Free" }
+    public var tierLabel: String { "Personal" }
 
-    @Published public private(set) var entitlements: SubscriptionEntitlements = .free
-    @Published public private(set) var accessibleFeatures: Set<AppFeature> = []
+    @Published public private(set) var entitlements = SubscriptionEntitlements(
+        tier: .ultra, features: Set(AppFeature.allCases), expiresAt: nil)
+    @Published public private(set) var accessibleFeatures: Set<AppFeature> = Set(AppFeature.allCases)
 
     public init() {}
 
     public var activeTier: SubscriptionTier { entitlements.tier }
     public var hasCorePlan: Bool { activeTier == .core }
-    public var isSignedIn: Bool { false }
-    public var userDisplayName: String { "Guest" }
-    public var hasBetaSoftwareAccess: Bool { false }
+    public var isSignedIn: Bool { true }
+    public var userDisplayName: String { "Personal" }
+    public var hasBetaSoftwareAccess: Bool { true }
 
     public func hasAccess(to feature: AppFeature) -> Bool { SubscriptionAccess.hasAccess(to: feature) }
     public func isFeatureEnabled(_ feature: AppFeature) -> Bool { SubscriptionAccess.hasAccess(to: feature) }
@@ -94,18 +98,9 @@ public final class FeatureGate {
 
     private init() {}
 
+    /// No hay muro de pago: nunca se bloquea ni se avisa.
     @discardableResult
-    public func require(_ feature: AppFeature, message: String) -> Bool {
-        let post = {
-            NotificationCenter.default.post(
-                name: .subscriptionPaywallRequested,
-                object: nil,
-                userInfo: ["message": message, "feature": feature.rawValue]
-            )
-        }
-        if Thread.isMainThread { post() } else { DispatchQueue.main.async(execute: post) }
-        return false
-    }
+    public func require(_ feature: AppFeature, message: String) -> Bool { true }
 }
 
 extension Notification.Name {

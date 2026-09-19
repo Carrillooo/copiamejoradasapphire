@@ -138,7 +138,7 @@ struct TimerDetailView: View {
         if !timers.isEmpty {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Sapphire Timers")
+                    Text("Iris Timers")
                         .font(.title3.bold())
                         .foregroundColor(.orange)
                     Spacer()

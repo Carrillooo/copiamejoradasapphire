@@ -39,8 +39,9 @@ struct PremiumFeatureView<Content: View>: View {
         self.content = content()
     }
 
+    // Sin muro de pago: el contenido se muestra tal cual, activo.
     var body: some View {
-        content.disabled(true).opacity(0.45)
+        content
     }
 }
 
@@ -83,9 +84,7 @@ extension WidgetType {
         }
     }
 
-    var isPremiumLocked: Bool {
-        requiredPremiumFeature.map { !PremiumGate.hasAccess($0) } ?? false
-    }
+    var isPremiumLocked: Bool { false }
 }
 
 extension LiveActivityType {
@@ -97,8 +96,6 @@ extension LiveActivityType {
         }
     }
 
-    var isPremiumLocked: Bool {
-        requiredPremiumFeature.map { !PremiumGate.hasAccess($0) } ?? false
-    }
+    var isPremiumLocked: Bool { false }
 }
 #endif

@@ -109,7 +109,7 @@ struct AndroidWidgetEntryView: View {
                     Image(systemName: "iphone.gen3.radiowaves.left.and.right")
                         .font(.system(size: 30, weight: .medium))
                         .foregroundStyle(.secondary)
-                    Text(entry.snapshot == nil ? "Add an Android widget in Sapphire" : "Waiting for your phone")
+                    Text(entry.snapshot == nil ? "Add an Android widget in Iris" : "Waiting for your phone")
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.secondary)

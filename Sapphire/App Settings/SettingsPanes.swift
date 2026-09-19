@@ -103,7 +103,7 @@ struct LockedSettingsSectionView: View {
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(.secondary)
 
-            Text("\(section.label) requires Sapphire \(requiredTierName)")
+            Text("\(section.label) requires Iris \(requiredTierName)")
                 .font(.title2.bold())
                 .multilineTextAlignment(.center)
 
@@ -1226,7 +1226,7 @@ private struct InstalledAppUpdateRowView: View {
                         }
                     }
                     if checker.buttonLabel(for: entry) == "Open App" {
-                        Text("Uses its own signed updater — Sapphire will open the app.")
+                        Text("Uses its own signed updater — Iris will open the app.")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                     }
@@ -1598,16 +1598,16 @@ struct GeneralSettingsView: View {
 
                 SettingsCard(title: "System") {
 
-                    ToggleRow(title: "Launch at Login", description: "Start Sapphire automatically when you log in to your Mac.", isOn: $settings.settings.launchAtLogin)
+                    ToggleRow(title: "Launch at Login", description: "Start Iris automatically when you log in to your Mac.", isOn: $settings.settings.launchAtLogin)
                     Divider().padding(.leading, 20)
 
                     ToggleRow(title: "Enable Haptic Feedback", description: "Provide tactile feedback for certain interactions.", isOn: $settings.settings.hapticFeedbackEnabled)
                     Divider().padding(.leading, 20)
 
-                    ToggleRow(title: "Hide from Screen Sharing", description: "Never include Sapphire in screen sharing, screenshots, or screen recordings.", isOn: $settings.settings.hideFromScreenSharing)
+                    ToggleRow(title: "Hide from Screen Sharing", description: "Never include Iris in screen sharing, screenshots, or screen recordings.", isOn: $settings.settings.hideFromScreenSharing)
                     Divider().padding(.leading, 20)
 
-                    ToggleRow(title: "Google Analytics", description: "Send anonymous usage events to Google to help improve Sapphire. Disable this to opt out of analytics collection.", isOn: $settings.settings.googleAnalyticsEnabled)
+                    ToggleRow(title: "Google Analytics", description: "Send anonymous usage events to Google to help improve Iris. Disable this to opt out of analytics collection.", isOn: $settings.settings.googleAnalyticsEnabled)
                     Divider().padding(.leading, 20)
 
                     ToggleRow(
@@ -1634,7 +1634,7 @@ struct GeneralSettingsView: View {
                         }.labelsHidden().frame(width: 200)
                     }.padding()
 
-                    Text("Choose which display Sapphire should attach to when multiple screens are connected.")
+                    Text("Choose which display Iris should attach to when multiple screens are connected.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .padding(.horizontal)
@@ -2238,7 +2238,7 @@ struct ClipboardSettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             PremiumFeatureView(feature: .clipboardPicker) {
                 VStack(alignment: .leading, spacing: 0) {
-                    SettingsSectionHeader(title: "Quick Picker", description: "Open the unified Sapphire picker right where you're typing with a global shortcut. Selecting a clipboard item copies it and pastes it at the cursor; the Emoji tab types emoji directly. (The emoji shortcut opens the same panel on its Emoji tab.)")
+                    SettingsSectionHeader(title: "Quick Picker", description: "Open the unified Iris picker right where you're typing with a global shortcut. Selecting a clipboard item copies it and pastes it at the cursor; the Emoji tab types emoji directly. (The emoji shortcut opens the same panel on its Emoji tab.)")
 
                     ToggleRow(
                         title: "Enable Quick Picker",
@@ -2345,7 +2345,7 @@ struct ClipboardSettingsView: View {
 
                     ToggleRow(
                         title: "Monitor Clipboard",
-                        description: "Continuously capture newly copied text and images into Sapphire history.",
+                        description: "Continuously capture newly copied text and images into Iris history.",
                         isOn: $settings.settings.clipboardMonitoringEnabled
                     )
                     .onChange(of: settings.settings.clipboardMonitoringEnabled) { _, enabled in
@@ -2364,7 +2364,7 @@ struct ClipboardSettingsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     ToggleRow(
                         title: "Unlimited History",
-                        description: "Keep every clipboard item Sapphire captures with no retention cap.",
+                        description: "Keep every clipboard item Iris captures with no retention cap.",
                         isOn: $settings.settings.clipboardHistoryUnlimited
                     )
                     .onChange(of: settings.settings.clipboardHistoryUnlimited) { _, unlimited in
@@ -2556,7 +2556,7 @@ struct ClipboardSettingsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     PremiumFeatureView(feature: .clipboardAdvancedTools) {
                         VStack(alignment: .leading, spacing: 0) {
-                            SettingsSectionHeader(title: "Text Snippets", description: "Type a short trigger anywhere and it becomes your text. Use \"{{date}}\", \"{{time}}\", \"{{date:MMMM d}}\" or \"{{clipboard}}\" in the replacement. Sapphire never expands while you type inside Sapphire itself.")
+                            SettingsSectionHeader(title: "Text Snippets", description: "Type a short trigger anywhere and it becomes your text. Use \"{{date}}\", \"{{time}}\", \"{{date:MMMM d}}\" or \"{{clipboard}}\" in the replacement. Iris never expands while you type inside Iris itself.")
 
                             ToggleRow(
                                 title: "Enable Text Snippets",
@@ -2716,7 +2716,7 @@ struct CaffeineSettingsView: View {
 
                     ToggleRow(
                         title: "Prevent Sleep in Clamshell Mode",
-                        description: "Keep your Mac awake while Sapphire's caffeinate mode is active, even with the lid closed.",
+                        description: "Keep your Mac awake while Iris's caffeinate mode is active, even with the lid closed.",
                         isOn: $settings.settings.sleepInClamshell
                     )
 
@@ -2801,7 +2801,7 @@ struct WidgetsSettingsView: View {
                     ToggleRow(title: "Show Dividers Between Widgets", description: "Display a subtle line separating each widget.", isOn: $settings.settings.showDividersBetweenWidgets)
                     ToggleRow(
                         title: "Ignore Widget Space Limit",
-                        description: "Allow any widget to be enabled even when Sapphire estimates there is not enough notch space.",
+                        description: "Allow any widget to be enabled even when Iris estimates there is not enough notch space.",
                         isOn: $settings.settings.bypassWidgetSpaceLimit
                     )
                 }
@@ -3774,7 +3774,7 @@ struct LockScreenSettingsView: View {
 
                     ToggleRow(
                         title: "Custom Lock Screen Wallpaper",
-                        description: "Show your own image or video behind the clock, sign-in controls, and Sapphire widgets on the lock screen.",
+                        description: "Show your own image or video behind the clock, sign-in controls, and Iris widgets on the lock screen.",
                         isOn: $settings.settings.lockScreenCustomWallpaperEnabled
                     )
 
@@ -4010,7 +4010,7 @@ struct LockScreenSettingsView: View {
 
                     ToggleRow(
                         title: "Show Notch on Lock Screen",
-                        description: "Keep the Sapphire notch bar visible at the top of the lock screen.",
+                        description: "Keep the Iris notch bar visible at the top of the lock screen.",
                         isOn: $settings.settings.lockScreenShowNotch
                     )
 
@@ -5495,8 +5495,8 @@ struct ProximityUnlockSettingsView: View {
         VStack(alignment: .leading, spacing: 0) {
             Text("Security").font(.subheadline).bold().padding([.horizontal, .top])
             ToggleRow(
-                title: "Spoof Detection",
-                description: "Block photos, videos, or screen captures from unlocking Face ID.",
+                title: "Detección de suplantación",
+                description: "Activado, exige el modelo de liveness para autenticar; si falta, no desbloquea nunca. Desactivado, basta el reconocimiento facial: funciona siempre, pero una fotografía puede desbloquear.",
                 isOn: $settings.settings.faceIDAntiSpoofEnabled
             )
             Divider().padding(.leading, 20)
@@ -6063,7 +6063,7 @@ struct FanControlSectionView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("No fans detected on this system.")
                         .foregroundColor(.secondary)
-                    Text("Fanless Macs (some MacBook Air models) will show this permanently. Otherwise, ensure the Sapphire helper is installed and retry.")
+                    Text("Fanless Macs (some MacBook Air models) will show this permanently. Otherwise, ensure the Iris helper is installed and retry.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     Button("Retry Detection") {
@@ -6299,7 +6299,7 @@ private struct FanCurveEditorView: View {
                 .buttonStyle(.borderless)
             }
 
-            Text("Set RPM at each temperature. Sapphire interpolates between points.")
+            Text("Set RPM at each temperature. Iris interpolates between points.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -8109,7 +8109,7 @@ struct BatteryConfigurationView: View {
                 CustomSliderRowView(label: "Log every", value: Binding(get: { Double(settings.settings.sleepLoggingIntervalMinutes) }, set: { settings.settings.sleepLoggingIntervalMinutes = Int($0) }), range: 15...120, specifier: "%.0f min")
             }
             Divider().padding(.leading, 20)
-            ToggleRow(title: "Stop charging when app closed", description: "The helper tool ensures your charging rules are still applied even if the Sapphire app isn't running.", isOn: .constant(true)).disabled(true)
+            ToggleRow(title: "Stop charging when app closed", description: "The helper tool ensures your charging rules are still applied even if the Iris app isn't running.", isOn: .constant(true)).disabled(true)
             Divider().padding(.leading, 20)
             ToggleRow(title: "Disable Sleep until Charge Limit", description: "Keeps your Mac awake to ensure it reaches the charge limit, useful for 'top-up' schedules before you need to leave.", isOn: $settings.settings.disableSleepUntilChargeLimit)
         }.modifier(SettingsContainerModifier())
@@ -8888,7 +8888,7 @@ struct MusicSettingsView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Spotify (Private API)").font(.headline).padding([.horizontal, .top])
                     InfoContainer(text: "WARNING: This method uses Spotify’s internal APIs to unlock standard and additional features for both Premium and non-Premium users. Use at your own risk, usage may be subject to Spotify’s Terms of Service.", iconName: "exclamationmark.triangle.fill", color: .yellow).padding(.horizontal)
-                    InfoContainer(text: "Sapphire is a Connect controller only, audio always plays on the Spotify desktop app or another speaker.", iconName: "hifispeaker", color: .blue).padding(.horizontal)
+                    InfoContainer(text: "Iris is a Connect controller only, audio always plays on the Spotify desktop app or another speaker.", iconName: "hifispeaker", color: .blue).padding(.horizontal)
                     Divider().padding(.horizontal, 20)
                     if isPrivateAuth {
                         VStack(spacing: 0) {
@@ -10244,7 +10244,7 @@ struct AboutSettingsView: View {
                         .onTapGesture { handleDebugIconTap() }
                         .help(debugMode.isEnabled ? "Debug mode is ON — tap 5× quickly to disable" : "Tap 5× quickly to enable debug mode")
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Sapphire").font(.largeTitle.weight(.bold))
+                        Text("Iris").font(.largeTitle.weight(.bold))
                         Text(versionLabel).foregroundStyle(.secondary).textSelection(.enabled)
 
                         if debugMode.isEnabled {
@@ -10391,7 +10391,7 @@ struct AboutSettingsView: View {
                 backupStatusMessage = BackupStatusMessage(
                     icon: "arrow.counterclockwise.circle.fill",
                     color: .orange,
-                    message: "All Sapphire settings were reset to defaults."
+                    message: "All Iris settings were reset to defaults."
                 )
             }
             Button("Cancel", role: .cancel) {}
@@ -10408,7 +10408,7 @@ struct AboutSettingsView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Settings Backup")
                         .font(.headline)
-                    Text("Save a portable copy of your Sapphire preferences or restore one you exported earlier.")
+                    Text("Save a portable copy of your Iris preferences or restore one you exported earlier.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -10464,7 +10464,7 @@ struct AboutSettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Start Fresh")
                         .font(.subheadline.weight(.medium))
-                    Text("Restore all Sapphire preferences to their defaults.")
+                    Text("Restore all Iris preferences to their defaults.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -10551,7 +10551,7 @@ struct AboutSettingsView: View {
                 Divider().padding(.leading)
                 ToggleRow(
                     title: "Update notifications",
-                    description: "Notify you when a verified Sapphire release is ready.",
+                    description: "Notify you when a verified Iris release is ready.",
                     isOn: $settingsModel.settings.updateAvailableNotificationsEnabled
                 )
                 .disabled(!settingsModel.settings.automaticUpdateChecksEnabled)
@@ -10559,7 +10559,7 @@ struct AboutSettingsView: View {
                 Divider().padding(.leading)
                 ToggleRow(
                     title: "Show update Live Activity",
-                    description: "Show an alert in the notch when a new Sapphire version is available.",
+                    description: "Show an alert in the notch when a new Iris version is available.",
                     isOn: $settingsModel.settings.showUpdateAvailableLiveActivity
                 )
             }
@@ -10590,7 +10590,7 @@ struct AboutSettingsView: View {
     }
 
     private var backupFilename: String {
-        "Sapphire-Settings-\(Self.backupDateFormatter.string(from: .now))"
+        "Iris-Settings-\(Self.backupDateFormatter.string(from: .now))"
     }
 }
 
@@ -12891,7 +12891,7 @@ struct FocusSessionSettingsView: View {
                     .font(.system(size: 12, weight: .semibold))
             }
             .padding(.top, 10).padding(.horizontal, 16).padding(.bottom, 6)
-            Text("Sapphire automatically uses Apple's standard Clock shortcut names (\"Start Timer\", \"Start Stopwatch\", etc.). If iCloud sync is enabled and those Clock shortcuts are present on this Mac, they run automatically during sessions.")
+            Text("Iris automatically uses Apple's standard Clock shortcut names (\"Start Timer\", \"Start Stopwatch\", etc.). If iCloud sync is enabled and those Clock shortcuts are present on this Mac, they run automatically during sessions.")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 16).padding(.top, 2).padding(.bottom, 8)

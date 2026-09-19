@@ -1511,7 +1511,11 @@ struct Settings: Codable, Equatable {
     var faceIDUnlockEnabled: Bool = false
     var faceIDLocationPolicy: FaceIDLocationPolicy = .everywhere
     var faceIDAllowedWiFiNetworks: [String] = []
-    var faceIDAntiSpoofEnabled: Bool = true
+    // Por defecto desactivado, como en Sapphire. El modelo de liveness no se
+    // distribuye con el código, así que con esto activado el reconocimiento
+    // facial no llega a autenticar nunca (falla cerrado, a propósito).
+    // Contrapartida real: sin liveness, una fotografía puede desbloquear.
+    var faceIDAntiSpoofEnabled: Bool = false
     var hasRegisteredFaceID: Bool = false
     var faceIDSpoofLockDuration: Double = 3.0
     var faceIDAntiSpoofAcceptThreshold: Double = 0.50

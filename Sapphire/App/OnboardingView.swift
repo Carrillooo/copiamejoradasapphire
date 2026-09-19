@@ -70,7 +70,8 @@ struct OnboardingView: View {
                     case .corePreferences:
                         CorePreferencesStepView(onNext: { currentStep = .lockScreenSetup })
                     case .lockScreenSetup:
-                        LockScreenSetupStepView(onNext: { currentStep = .subscriptionOverview })
+                        // Sin planes ni suscripciones: se salta el paso de plan.
+                        LockScreenSetupStepView(onNext: { currentStep = .finish })
                     case .subscriptionOverview:
                         SubscriptionOverviewStepView(onNext: { currentStep = .finish })
                     case .finish:
@@ -102,7 +103,7 @@ private struct WelcomeStepView: View {
                 .frame(width: 80, height: 80)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-            Text("Welcome to Sapphire")
+            Text("Welcome to Iris")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .multilineTextAlignment(.center)
 
@@ -129,7 +130,7 @@ private struct PermissionsStepView: View {
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .padding(.top, 40).padding(.bottom, 10)
 
-            Text("Sapphire needs a few permissions for its core features.")
+            Text("Iris needs a few permissions for its core features.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
@@ -170,7 +171,7 @@ private struct HelperInstallationStepView: View {
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .padding(.top, 40).padding(.bottom, 10)
 
-            Text("Sapphire needs a privileged helper for battery management and system integrations. macOS will ask you to allow it under Login Items → Background Activity.")
+            Text("Iris needs a privileged helper for battery management and system integrations. macOS will ask you to allow it under Login Items → Background Activity.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
@@ -295,7 +296,7 @@ private struct PrivacyStepView: View {
                 VStack(alignment: .leading, spacing: 18) {
                     PrivacySection(
                         title: "Data We Collect (Analytics)",
-                        content: "To improve Sapphire, we collect completely anonymous, aggregated usage data. This helps us understand which features are popular, identify bugs, and make the app better for everyone."
+                        content: "To improve Iris, we collect completely anonymous, aggregated usage data. This helps us understand which features are popular, identify bugs, and make the app better for everyone."
                     )
 
                     PrivacySection(
@@ -324,7 +325,7 @@ private struct PrivacyStepView: View {
             .padding(.top, 20)
 
             Toggle(isOn: $settings.settings.googleAnalyticsEnabled) {
-                Text("Share anonymous usage data with Google Analytics to help improve Sapphire. You can change this anytime in Settings > General.")
+                Text("Share anonymous usage data with Google Analytics to help improve Iris. You can change this anytime in Settings > General.")
                     .font(.callout)
             }
             .padding(.horizontal, 50)
@@ -505,7 +506,7 @@ private struct CorePreferencesStepView: View {
                     SettingsSwitch(isOn: $settings.settings.eyeBreakLiveActivityEnabled)
                 }
                 ModernOnboardingRow(iconName: "thermometer.sun.fill", iconColor: .orange, title: "Temperature Unit", description: "Preferred unit for weather forecasts.") { Picker("", selection: $settings.settings.weatherUseCelsius) { Text("°C").tag(true); Text("°F").tag(false) }.pickerStyle(.segmented).labelsHidden().frame(width: 100) }
-                ModernOnboardingRow(iconName: "bolt.horizontal.circle.fill", iconColor: .purple, title: "Launch at Login", description: "Start Sapphire automatically with your Mac.") { SettingsSwitch(isOn: $settings.settings.launchAtLogin) }
+                ModernOnboardingRow(iconName: "bolt.horizontal.circle.fill", iconColor: .purple, title: "Launch at Login", description: "Start Iris automatically with your Mac.") { SettingsSwitch(isOn: $settings.settings.launchAtLogin) }
             }.padding(50)
             Spacer()
             OnboardingButton(title: "Continue", action: onNext)
@@ -530,7 +531,7 @@ private struct LockScreenSetupStepView: View {
                 .padding(.horizontal, 50)
 
             VStack(spacing: 15) {
-                ModernOnboardingRow(iconName: "lock.display", iconColor: .red, title: "Enable on Lock Screen", description: "Show Sapphire's notch and features when your Mac is locked.") {
+                ModernOnboardingRow(iconName: "lock.display", iconColor: .red, title: "Enable on Lock Screen", description: "Show Iris's notch and features when your Mac is locked.") {
                     SettingsSwitch(isOn: $settings.settings.lockScreenShowNotch)
                 }
 
@@ -567,7 +568,7 @@ private struct SubscriptionOverviewStepView: View {
         VStack(spacing: 20) {
             Spacer()
 
-            Text("Your Sapphire Plan")
+            Text("Your Iris Plan")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
 
             Text("Link an account anytime in Settings to sync your subscription across devices.")
@@ -869,7 +870,7 @@ private struct FinishStepView: View {
                 .padding(.top)
 
             Spacer()
-            OnboardingButton(title: "Explore Sapphire", action: onComplete)
+            OnboardingButton(title: "Explore Iris", action: onComplete)
 
             Text("© 2025 Shariq Charolia. All rights reserved.")
                 .font(.caption).foregroundStyle(.tertiary).padding(.bottom, 20)
@@ -887,7 +888,7 @@ private struct OnboardingUpdateStatusView: View {
             switch updateChecker.status {
             case .checking: HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Checking for updates...").foregroundStyle(.secondary) }
             case .upToDate: HStack(spacing: 8) { Image(systemName: "checkmark.circle.fill").foregroundStyle(.green); Text("You are up to date!").foregroundStyle(.secondary) }
-            case .available(let version, _): VStack(spacing: 8) { Text("Version \(version) is available!").font(.headline); Link(destination: URL(string: "https://github.com/cshariq/Sapphire/releases")!) { Text("Download from GitHub") }.buttonStyle(.bordered).tint(.accentColor) }
+            case .available(let version, _): VStack(spacing: 8) { Text("Version \(version) is available!").font(.headline); Link(destination: URL(string: "https://github.com/Carrillooo/copiamejoradasapphire/releases")!) { Text("Download from GitHub") }.buttonStyle(.bordered).tint(.accentColor) }
             case .error(let message): HStack(spacing: 8) { Image(systemName: "xmark.octagon.fill").foregroundColor(.red); Text(message).foregroundStyle(.secondary).lineLimit(1) }
             default: EmptyView()
             }
