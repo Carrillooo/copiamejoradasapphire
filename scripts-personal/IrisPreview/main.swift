@@ -33,7 +33,7 @@ private struct SampleToggleRow: View {
                 }
             }
             Spacer(minLength: Iris.Spacing.lg)
-            Toggle("", isOn: .constant(isOn)).labelsHidden().toggleStyle(.switch)
+            Toggle("", isOn: .constant(isOn)).labelsHidden().toggleStyle(.irisSwitch)
         }
         .padding(.horizontal, Iris.Spacing.lg)
         .padding(.vertical, Iris.Spacing.md)

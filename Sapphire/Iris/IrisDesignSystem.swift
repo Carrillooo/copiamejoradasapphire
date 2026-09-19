@@ -351,3 +351,61 @@ public extension View {
         modifier(IrisPressable(scale: scale))
     }
 }
+
+// MARK: - Interruptor
+
+/// Interruptor propio de Iris.
+///
+/// Es un `ToggleStyle`, no un control inventado: por dentro sigue siendo un
+/// `Toggle`, así que conserva el foco por teclado, VoiceOver y el estado
+/// accesible. Sólo cambia cómo se dibuja.
+///
+/// El pulgar se mueve con muelle, y el muelle lleva un punto de rebote porque
+/// aquí el gesto sí tiene physicality: algo se desplaza de un extremo a otro.
+/// Con «reducir movimiento» el muelle se sustituye por un fundido corto.
+public struct IrisSwitchToggleStyle: ToggleStyle {
+    public init() {}
+
+    private var width: CGFloat { 38 }
+    private var height: CGFloat { 22 }
+    private var thumb: CGFloat { 18 }
+
+    public func makeBody(configuration: Configuration) -> some View {
+        // Sin Spacer: con `labelsHidden()` un Spacer se comería todo el ancho
+        // disponible y descolocaría la fila. Quien necesite separación la pone
+        // fuera, que es donde se decide la composición.
+        HStack(spacing: Iris.Spacing.sm) {
+            configuration.label
+            track(isOn: configuration.isOn)
+                .contentShape(Rectangle())
+                .onTapGesture { configuration.isOn.toggle() }
+                .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private func track(isOn: Bool) -> some View {
+        ZStack(alignment: isOn ? .trailing : .leading) {
+            Capsule()
+                .fill(isOn ? Iris.Palette.accent : Iris.Palette.fillSunken)
+                .overlay(
+                    Capsule().strokeBorder(
+                        isOn ? Color.clear : Iris.Palette.hairline,
+                        lineWidth: 1
+                    )
+                )
+
+            Circle()
+                .fill(Color.white)
+                .frame(width: thumb, height: thumb)
+                .shadow(color: .black.opacity(0.22), radius: 1.5, x: 0, y: 1)
+                .padding(.horizontal, (height - thumb) / 2)
+        }
+        .frame(width: width, height: height)
+        .animation(Iris.Motion.momentum, value: isOn)
+    }
+}
+
+public extension ToggleStyle where Self == IrisSwitchToggleStyle {
+    static var irisSwitch: IrisSwitchToggleStyle { IrisSwitchToggleStyle() }
+}

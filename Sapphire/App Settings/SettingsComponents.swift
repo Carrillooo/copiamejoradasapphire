@@ -39,7 +39,7 @@ struct SettingsSwitch: View {
     var body: some View {
         Toggle(title, isOn: $isOn)
             .labelsHidden()
-            .toggleStyle(.switch)
+            .toggleStyle(.irisSwitch)
     }
 }
 
