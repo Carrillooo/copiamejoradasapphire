@@ -299,7 +299,7 @@ enum EnrollmentEmbeddingFailure: Error, Equatable {
 final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptureVideoDataOutputSampleBufferDelegate {
     public let id = UUID()
     @Published var appState: CameraState = .idle
-    @Published var userInstruction: String = "Press 'Register' to begin."
+    @Published var userInstruction: String = "Pulsa «Registrar» para empezar"
     @Published var faceIsRecognized: Bool = false
     // `smoothedBoundingBox` se ha eliminado. Era @Published, se escribía en
     // CADA fotograma (~30/s) desde DispatchQueue.main.async y no la leía nadie.
@@ -534,7 +534,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
     private func notifyCameraUnavailable() {
         DispatchQueue.main.async {
             self.appState = .idle
-            self.userInstruction = "Camera access is required for Face ID. Enable it in System Settings → Privacy & Security → Camera."
+            self.userInstruction = "Iris necesita acceso a la cámara. Actívalo en Ajustes del Sistema → Privacidad y seguridad → Cámara."
         }
     }
 
@@ -632,12 +632,17 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         mismatchStart = nil
         sessionStartDate = Date()
         lastLogTime = 0
+        // El freno de instrucciones recuerda lo último que publicó. Si no se
+        // reinicia aquí, un mensaje repetido de la sesión anterior se
+        // descartaría por «no ha cambiado» y la pantalla se quedaría muda.
+        lastPublishedInstruction = "Buscando tu cara…"
+        lastInstructionPublish = Date.distantPast
 
         FaceIDModelManager.shared.prewarm()
 
         DispatchQueue.main.async {
             self.appState = .authenticating
-            self.userInstruction = "Looking for your face…"
+            self.userInstruction = "Buscando tu cara…"
         }
         startCameraSession()
     }
@@ -704,7 +709,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         DispatchQueue.main.async {
             self.holdProgress = 0.0
             self.appState = .registering(.finalizing)
-            self.userInstruction = "Securing face profile..."
+            self.userInstruction = "Guardando el perfil facial…"
         }
 
         let allPrints = poseBucketSamples.values.flatMap { $0 }
@@ -712,7 +717,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             self.appState = .registeredAndIdle
-            self.userInstruction = "Registration Complete!"
+            self.userInstruction = "¡Registro completado!"
             self.cleanupFaceIDResources()
             AuthenticationManager.shared.fetchRegisteredFaces()
         }
@@ -735,16 +740,30 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         try? handler.perform([faceLandmarksRequest])
 
         guard let obs = faceLandmarksRequest.results?.first else {
-            DispatchQueue.main.async {
-                if self.isRegistrationMode {
-                    self.userInstruction = "Position your face in the camera view."
-                    if !self.accumulatedEmbeddings.isEmpty { self.accumulatedEmbeddings.removeLast() }
-                }
+            if isRegistrationMode {
+                // Dos arreglos en dos líneas.
+                //
+                // El mensaje se publicaba con un salto al hilo principal en
+                // CADA fotograma sin cara: treinta por segundo. @Published
+                // avisa a sus observadores en cada asignación, cambie o no el
+                // valor, así que la pantalla de registro se reconstruía entera
+                // treinta veces por segundo mientras no hubiera nadie delante.
+                publishInstruction("Colócate delante de la cámara")
+
+                // Y `accumulatedEmbeddings` se tocaba desde el hilo principal,
+                // cuando el resto del registro la escribe desde la cola de
+                // captura. Dos hilos mutando el mismo array sin sincronizar no
+                // es un problema de rendimiento: es una caída esperando su
+                // turno. Aquí ya estamos en la cola de captura.
+                if !accumulatedEmbeddings.isEmpty { accumulatedEmbeddings.removeLast() }
             }
             return
         }
 
-        if let quality = obs.faceCaptureQuality, quality < 0.10 { return }
+        if let quality = obs.faceCaptureQuality, quality < 0.10 {
+            if isRegistrationMode { publishInstruction("Hace falta más luz sobre la cara") }
+            return
+        }
 
         if isRegistrationMode {
             handleRegistration(observation: obs, pixelBuffer: pixelBuffer)
@@ -917,7 +936,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
             DispatchQueue.main.async {
                 self.holdProgress = 0.0
                 self.appState = .registering(.askExtended)
-                self.userInstruction = "Basic setup complete."
+                self.userInstruction = "Registro básico completado"
             }
         } else {
             finalizeRegistration()
@@ -1012,12 +1031,20 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
             frameIsReal = true
         }
 
-        guard let embedding = FaceIDDataStore.shared.generateAuthEmbedding(
+        let embedding: [Float]
+        switch FaceIDDataStore.shared.authEmbedding(
             observation: observation,
             pixelBuffer: pixelBuffer,
             tag: "auth_f\(frameCounter)",
             checkSharpness: true
-        ) else {
+        ) {
+        case .success(let value):
+            embedding = value
+        case .failure(let motivo):
+            // Fail-closed: sin huella no se desbloquea. Lo único que se añade
+            // es contarlo, porque callarlo dejaba la pantalla congelada.
+            verifiedConsecutiveFrames = 0
+            publishInstruction(motivo.hint, immediate: motivo.isFatal)
             return
         }
 
@@ -1054,7 +1081,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
                 return
             }
             DispatchQueue.main.async {
-                self.userInstruction = String(format: "Verifying... %.0f%%", min(99, score / FaceIDConfig.unlockIdentityThreshold * 100))
+                self.userInstruction = String(format: "Comprobando… %.0f %%", min(99, score / FaceIDConfig.unlockIdentityThreshold * 100))
             }
             return
         } else {
@@ -1070,7 +1097,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
             DispatchQueue.main.async {
                 self.appState = .recognized
                 self.faceIsRecognized = true
-                self.userInstruction = "Authenticated!"
+                self.userInstruction = "Identidad confirmada"
                 AuthenticationManager.shared.handleFaceIDAuthenticated()
             }
         }
@@ -1146,25 +1173,47 @@ final class FaceIDDataStore {
         return (maxScore * 0.85) + (centroidScore * 0.15)
     }
 
-    func generateAuthEmbedding(observation: VNFaceObservation, pixelBuffer: CVPixelBuffer, tag: String? = nil, checkSharpness: Bool = true) -> [Float]? {
-        guard let faceImg = FaceAligner.alignFace(pixelBuffer: pixelBuffer, observation: observation, size: 112) else { return nil }
+    /// Huella facial para el desbloqueo, o el motivo del fallo.
+    ///
+    /// Lo que se decide no cambia: sin huella no se desbloquea, y sigue siendo
+    /// así. Lo que cambia es que ahora se puede DECIR por qué.
+    ///
+    /// Importaba más de lo que parece. Sin el modelo ArcFace esto devolvía nil
+    /// en todos los fotogramas, y quien llamaba hacía `return` antes de llegar
+    /// al contador de «no te reconozco», así que ni siquiera saltaba el aviso
+    /// de los seis segundos: la pantalla de desbloqueo se quedaba igual, para
+    /// siempre, sin una palabra.
+    func authEmbedding(
+        observation: VNFaceObservation,
+        pixelBuffer: CVPixelBuffer,
+        tag: String? = nil,
+        checkSharpness: Bool = true
+    ) -> Result<[Float], EnrollmentEmbeddingFailure> {
+        guard let faceImg = FaceAligner.alignFace(pixelBuffer: pixelBuffer, observation: observation, size: 112) else {
+            return .failure(.alignmentFailed)
+        }
 
         bufferLock.lock()
         defer { bufferLock.unlock() }
 
         if faceArray == nil { faceArray = try? MLMultiArray(shape: [1, 3, 112, 112], dataType: .float32) }
-        guard let fArr = faceArray else { return nil }
+        guard let fArr = faceArray else { return .failure(.internalError) }
 
         if facePixels.count != 112 * 112 * 4 { facePixels = [UInt8](repeating: 0, count: 112 * 112 * 4) }
         ciContext.render(faceImg, toBitmap: &facePixels, rowBytes: 112 * 4, bounds: CGRect(x: 0, y: 0, width: 112, height: 112), format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
 
-        if checkSharpness && !FaceAligner.isBufferSharp(&facePixels, size: 112, blurThreshold: 3.5) { return nil }
+        if checkSharpness && !FaceAligner.isBufferSharp(&facePixels, size: 112, blurThreshold: 3.5) {
+            return .failure(.notSharp)
+        }
 
         FaceAligner.normalizeFaceExposure(pixels: &facePixels, size: 112)
         FaceAligner.applyCLAHE(pixels: &facePixels, size: 112)
         FaceAligner.fillInputArray(array: fArr, from: &facePixels, size: 112, flipped: false, normMode: .arcFace)
 
-        return FaceIDModelManager.shared.predictEmbeddingOnly(embeddingArray: fArr)
+        guard let embedding = FaceIDModelManager.shared.predictEmbeddingOnly(embeddingArray: fArr) else {
+            return .failure(.modelUnavailable)
+        }
+        return .success(embedding)
     }
 
     /// Huella facial de un fotograma para el registro, o el motivo del fallo.
