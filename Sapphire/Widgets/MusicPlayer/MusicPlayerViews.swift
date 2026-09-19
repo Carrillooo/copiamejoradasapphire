@@ -985,28 +985,49 @@ struct MusicWidgetView: View {
     }
 }
 
+/// Lo que enseña el widget de música cuando no hay nada sonando.
+///
+/// Era un bloque centrado con un icono grande y una pastilla, todo con blancos
+/// a mano, en inglés y con un alto propio: en mitad de la fila del notch se
+/// leía como una cosa pegada por fuera, no como uno de los widgets. Ahora usa
+/// la misma gramática que los demás —icono a la izquierda, texto alineado, el
+/// alto de la fila— y la acción es toda la superficie, que es lo que uno
+/// intenta pulsar de todas formas.
 private struct OpenPlayerView: View {
     let player: DefaultMusicPlayer
     let action: () -> Void
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "music.note")
-                .font(.system(size: 40, weight: .light))
-                .foregroundColor(.white.opacity(0.8))
+        Button(action: action) {
+            HStack(spacing: Iris.Spacing.md) {
+                Image(systemName: "music.note")
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(Iris.Notch.textSecondary)
+                    .frame(width: 26, alignment: .center)
 
-            Button(action: action) {
-                Text("Open \(player.displayName)")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.white.opacity(0.15))
-                    .clipShape(Capsule())
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Nada sonando")
+                        .irisText(Iris.Notch.title, color: Iris.Notch.textPrimary)
+                        .lineLimit(1)
+                    Text("Abrir \(player.displayName)")
+                        .irisText(Iris.Notch.detail, color: Iris.Notch.textTertiary)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
+            .padding(.horizontal, Iris.Notch.inset)
+            // 100, no `Iris.Notch.rowHeight` (86): el estado CON música mide
+            // 100 porque su carátula es de 100×100. Si el hueco midiera 86, el
+            // notch daría un salto de alto cada vez que empieza o para la
+            // música. Que el widget de música sea más alto que los demás es un
+            // desajuste real de la fila, pero se arregla bajando también el
+            // estado con música, no descuadrando los dos entre sí.
+            .frame(width: 300, height: 100)
+            .contentShape(Rectangle())
         }
-        .frame(width: 300, height: 100)
+        .buttonStyle(.plain)
+        .accessibilityLabel("Abrir \(player.displayName)")
     }
 }
 
