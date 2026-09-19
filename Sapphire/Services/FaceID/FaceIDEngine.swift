@@ -1041,8 +1041,17 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         case .success(let value):
             embedding = value
         case .failure(let motivo):
-            // Fail-closed: sin huella no se desbloquea. Lo único que se añade
-            // es contarlo, porque callarlo dejaba la pantalla congelada.
+            // Fail-closed: sin huella no se desbloquea, igual que antes.
+            //
+            // Dos cosas SÍ cambian, y conviene decirlas. La primera es que
+            // ahora se cuenta el motivo, porque callarlo dejaba la pantalla
+            // congelada sin explicación.
+            //
+            // La segunda es que un fotograma inservible rompe la racha. Antes
+            // no la rompía, así que «tres fotogramas seguidos verificados»
+            // aceptaba 1, inservible, 2, 3 —que no son seguidos—. Ahora sí lo
+            // son. Es más estricto, y es lo que la rama de liveness ya hacía
+            // unas líneas más arriba para el mismo caso.
             verifiedConsecutiveFrames = 0
             publishInstruction(motivo.hint, immediate: motivo.isFatal)
             return
@@ -1915,11 +1924,16 @@ final class FaceIDModelManager: ObservableObject {
         if FileManager.default.fileExists(atPath: cached.path) { return cached }
 
         guard let temporary = try? MLModel.compileModel(at: packageURL) else { return nil }
-        // Si la copia falla, se usa la temporal: peor que la caché, pero mejor
-        // que quedarse sin modelo.
-        try? FileManager.default.removeItem(at: cached)
-        guard (try? FileManager.default.copyItem(at: temporary, to: cached)) != nil else { return temporary }
-        return cached
+
+        do {
+            try FileManager.default.copyItem(at: temporary, to: cached)
+            return cached
+        } catch {
+            // Si no se puede guardar en la caché, se usa la temporal: peor,
+            // porque habrá que recompilar en el próximo arranque, pero mejor
+            // que quedarse sin modelo.
+            return temporary
+        }
     }
 
     private func getAntiSpoofBuffer() -> CVPixelBuffer? {
