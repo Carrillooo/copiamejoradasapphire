@@ -88,12 +88,17 @@ public extension Iris {
         /// Relleno sutil para elevar un elemento sobre su superficie. Sustituye
         /// a los `Color.white.opacity(0.06…0.12)` sueltos, que en apariencia
         /// clara eran blanco sobre blanco, es decir, invisibles.
-        public static let fillElevated = dynamic(light: srgb(0, 0, 0, 0.05),
-                                                 dark:  srgb(255, 255, 255, 0.07))
+        ///
+        /// En claro tira a blanco y en oscuro aclara: elevar es acercarse a la
+        /// luz. Tiene que verse DISTINTO de `fillSunken` en las dos
+        /// apariencias; con los valores anteriores (negro 5% y negro 4,5%) en
+        /// claro eran indistinguibles, que es lo que se vio al renderizarlos.
+        public static let fillElevated = dynamic(light: srgb(255, 255, 255, 0.92),
+                                                 dark:  srgb(255, 255, 255, 0.08))
         /// Relleno hundido, para pozos y campos. Sustituye a los
         /// `Color.black.opacity(0.15…0.2)`, que en clara eran un velo gris.
-        public static let fillSunken = dynamic(light: srgb(0, 0, 0, 0.045),
-                                               dark:  srgb(0, 0, 0, 0.28))
+        public static let fillSunken = dynamic(light: srgb(0, 0, 0, 0.085),
+                                               dark:  srgb(0, 0, 0, 0.32))
         /// Contenido sobre un relleno de color saturado (insignias, degradados).
         /// Aquí el blanco sí es correcto, y conviene que se note que es
         /// deliberado y no un color fijo olvidado.
