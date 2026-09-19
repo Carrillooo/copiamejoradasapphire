@@ -699,16 +699,10 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
                 // Antes: `if false && ...`, es decir, el registro aceptaba
                 // cualquier cara sin comprobar liveness. Si se registra una foto,
                 // esa foto queda como plantilla válida para siempre.
-                if SettingsModel.shared.settings.faceIDAntiSpoofEnabled {
-                    guard FaceIDModelManager.shared.livenessState == .ready else {
-                        FaceIDModelManager.shared.prewarm()
-                        DispatchQueue.main.async {
-                            self.userInstruction = FaceIDModelManager.shared.livenessState == .unavailable
-                                ? "No se puede registrar: falta el modelo de detección de suplantación."
-                                : "Preparando la verificación de liveness…"
-                        }
-                        return
-                    }
+                // Sólo se exige liveness si está EN VIGOR. Si el usuario lo
+                // pidió pero no hay modelo, se registra sin él: bloquear aquí
+                // dejaba el registro colgado para siempre en "Centra la cara".
+                if FaceIDModelManager.shared.antiSpoofInEffect {
                     guard let spoof = FaceIDModelManager.shared.evaluateAntiSpoof(
                         pixelBuffer: pixelBuffer,
                         observation: observation,
@@ -796,12 +790,12 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
 
         let activeThreshold: Float = FaceIDConfig.livenessBaseThreshold
 
-        // SEGURIDAD: el liveness nunca puede fallar "hacia abierto". Antes, esta
-        // variable empezaba en `true` y el bloque de comprobación era un
-        // `if let`: si el modelo faltaba o el fotograma no se podía evaluar, el
-        // bloque entero se saltaba y se autenticaba SIN ninguna comprobación de
-        // suplantación. El modelo de liveness no se distribuye con el
-        // repositorio, así que ése era el comportamiento por defecto.
+        // Arranca en `false` a propósito. En upstream empezaba en `true` con la
+        // comprobación dentro de un `if let`, así que un fotograma no evaluable
+        // —o un modelo que fallaba al cargar— autenticaba igualmente, sin
+        // comprobar nada. Aquí cada caso se decide explícitamente abajo, y el
+        // único que deja pasar sin comprobación es aquel en que el usuario ha
+        // renunciado a ella o el modelo no existe, y los ajustes lo advierten.
         var frameIsReal = false
         var spoofResult: AntiSpoofResult?
 
@@ -809,64 +803,64 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
 
         if SettingsModel.shared.settings.faceIDAntiSpoofEnabled {
             switch FaceIDModelManager.shared.livenessState {
-            case .ready:
-                break
+
             case .unknown, .loading:
-                // Todavía cargando: descartamos el fotograma sin puntuarlo, pero
-                // no cortamos la sesión.
+                // Aún cargando: se descarta el fotograma sin puntuarlo, pero no
+                // se corta la sesión.
                 FaceIDModelManager.shared.prewarm()
                 verifiedConsecutiveFrames = 0
                 DispatchQueue.main.async {
                     self.userInstruction = "Preparando la verificación de liveness…"
                 }
                 return
+
             case .unavailable:
-                // No hay modelo: no se autentica. Se cae a contraseña.
-                verifiedConsecutiveFrames = 0
-                DispatchQueue.main.async {
-                    self.userInstruction = "Face ID no disponible: falta el modelo de detección de suplantación."
-                }
-                self.onSecurityEvent?(.livenessUnavailable)
-                return
-            }
+                // Pedido pero imposible: el modelo no se distribuye con el
+                // código. Se continúa SIN comprobación en vez de dejar al
+                // usuario sin poder desbloquear nunca.
+                //
+                // Contrapartida real: sin liveness, una fotografía puede
+                // desbloquear. Los ajustes lo advierten en vez de callarlo.
+                frameIsReal = true
 
-            // Fotograma no evaluable (recorte pequeño, buffer no disponible,
-            // salida inesperada del modelo): se descarta sin puntuar.
-            guard let liveness = FaceIDModelManager.shared.evaluateAntiSpoof(
-                pixelBuffer: pixelBuffer,
-                observation: observation,
-                debugTag: debugTag
-            ) else {
-                verifiedConsecutiveFrames = 0
-                return
-            }
-
-            livenessHistory.append(liveness.rawScore)
-            if livenessHistory.count > 6 { livenessHistory.removeFirst() }
-
-            let smoothLiveness = livenessHistory.reduce(0, +) / Float(livenessHistory.count)
-
-            frameIsReal = (smoothLiveness >= activeThreshold)
-
-            spoofResult = AntiSpoofResult(
-                isReal: frameIsReal,
-                rawScore: liveness.rawScore,
-                smoothScore: smoothLiveness,
-                logit: liveness.logit
-            )
-            lastLivenessResult = spoofResult
-
-            let now = Date()
-            if !frameIsReal {
-                if clearSpoofStart == nil { clearSpoofStart = now }
-                if let start = clearSpoofStart, now.timeIntervalSince(start) >= 2.5 {
-                    print("[FaceID Security] Sustained spoof detected — locking Face ID.")
-                    self.onSecurityEvent?(.spoofLocked)
+            case .ready:
+                // Fotograma no evaluable (recorte pequeño, buffer no
+                // disponible, salida inesperada): se descarta sin puntuar.
+                guard let liveness = FaceIDModelManager.shared.evaluateAntiSpoof(
+                    pixelBuffer: pixelBuffer,
+                    observation: observation,
+                    debugTag: debugTag
+                ) else {
+                    verifiedConsecutiveFrames = 0
                     return
                 }
-                DispatchQueue.main.async { self.userInstruction = "Comprobando que eres una persona real…" }
-            } else {
-                clearSpoofStart = nil
+
+                livenessHistory.append(liveness.rawScore)
+                if livenessHistory.count > 6 { livenessHistory.removeFirst() }
+
+                let smoothLiveness = livenessHistory.reduce(0, +) / Float(livenessHistory.count)
+                frameIsReal = (smoothLiveness >= activeThreshold)
+
+                spoofResult = AntiSpoofResult(
+                    isReal: frameIsReal,
+                    rawScore: liveness.rawScore,
+                    smoothScore: smoothLiveness,
+                    logit: liveness.logit
+                )
+                lastLivenessResult = spoofResult
+
+                let now = Date()
+                if !frameIsReal {
+                    if clearSpoofStart == nil { clearSpoofStart = now }
+                    if let start = clearSpoofStart, now.timeIntervalSince(start) >= 2.5 {
+                        print("[FaceID Security] Sustained spoof detected — locking Face ID.")
+                        self.onSecurityEvent?(.spoofLocked)
+                        return
+                    }
+                    DispatchQueue.main.async { self.userInstruction = "Comprobando que eres una persona real…" }
+                } else {
+                    clearSpoofStart = nil
+                }
             }
         } else {
             // El usuario ha desactivado el anti-spoofing a conciencia. Sin
@@ -1361,6 +1355,29 @@ final class FaceIDModelManager {
         lock.lock()
         defer { lock.unlock() }
         return livenessAvailability
+    }
+
+    /// El anti-spoofing está EN VIGOR sólo si el usuario lo quiere Y el modelo
+    /// existe.
+    ///
+    /// Antes se miraba únicamente el ajuste. Como el modelo no se distribuye
+    /// con el código, quien lo tuviera activado quedaba en un callejón sin
+    /// salida: ni podía registrar la cara ni desbloquear, y el ajuste por
+    /// defecto no le servía de nada porque un valor por defecto no cambia lo
+    /// que ya está guardado.
+    ///
+    /// Contrapartida, dicha claramente: cuando se pide pero no hay modelo, el
+    /// reconocimiento funciona SIN comprobación de suplantación, así que una
+    /// fotografía puede desbloquear. Los ajustes lo advierten en vez de
+    /// callarlo.
+    var antiSpoofInEffect: Bool {
+        SettingsModel.shared.settings.faceIDAntiSpoofEnabled && livenessState == .ready
+    }
+
+    /// El usuario lo ha pedido pero no se puede cumplir. La interfaz lo usa
+    /// para avisar en lugar de aparentar que está protegido.
+    var antiSpoofRequestedButUnavailable: Bool {
+        SettingsModel.shared.settings.faceIDAntiSpoofEnabled && livenessState == .unavailable
     }
 
     private let persistentCacheModelURL: URL = {

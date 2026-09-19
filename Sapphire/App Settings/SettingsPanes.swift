@@ -5496,9 +5496,23 @@ struct ProximityUnlockSettingsView: View {
             Text("Security").font(.subheadline).bold().padding([.horizontal, .top])
             ToggleRow(
                 title: "Detección de suplantación",
-                description: "Activado, exige el modelo de liveness para autenticar; si falta, no desbloquea nunca. Desactivado, basta el reconocimiento facial: funciona siempre, pero una fotografía puede desbloquear.",
+                description: "Comprueba que hay una persona delante y no una fotografía o una pantalla. Necesita el modelo de liveness.",
                 isOn: $settings.settings.faceIDAntiSpoofEnabled
             )
+            // El modelo de liveness no se distribuye con el código. Si el
+            // usuario activa esto y no está, la protección NO se aplica: hay
+            // que decirlo, no dejar un interruptor encendido que no protege.
+            if FaceIDModelManager.shared.antiSpoofRequestedButUnavailable {
+                HStack(alignment: .top, spacing: Iris.Spacing.sm) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(Iris.Palette.warning)
+                    Text("El modelo de detección de suplantación no está instalado, así que esta comprobación no se aplica: el desbloqueo funciona sólo con reconocimiento facial y una fotografía podría servir. Se registra y desbloquea igualmente para no dejarte sin acceso.")
+                        .irisText(Iris.Typography.caption, color: Iris.Palette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.horizontal, Iris.Spacing.lg)
+                .padding(.bottom, Iris.Spacing.sm)
+            }
             Divider().padding(.leading, 20)
             CustomSliderRowView(
                 label: "Spoof Lock Duration",
