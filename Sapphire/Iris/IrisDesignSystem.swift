@@ -448,9 +448,17 @@ public extension Iris {
         public static let inset: CGFloat = Iris.Spacing.md
 
         // --- Tipografía -------------------------------------------------
-        /// La cifra grande de un widget (temperatura, hora, porcentaje).
+        /// La CIFRA grande de un widget: temperatura, cuenta atrás, porcentaje.
+        /// Sólo para números. Una palabra con este tamaño aplasta la fila
+        /// entera y descompensa unos widgets contra otros.
         public static let metric = TextStyle(size: 30, weight: .semibold, tracking: -0.6,
                                              lineSpacing: 0, design: .rounded)
+        /// El TÍTULO de un widget cuando lo primero que hay que decir es una
+        /// palabra y no una cifra ("Concentración", "Sin conexión"). Más
+        /// pequeño que `metric` a propósito: pesan distinto porque dicen cosas
+        /// distintas.
+        public static let title = TextStyle(size: 19, weight: .semibold, tracking: -0.3,
+                                            lineSpacing: 0, design: .rounded)
         /// El nombre de lo que se muestra.
         public static let label = TextStyle(size: 13, weight: .medium, tracking: -0.05,
                                             lineSpacing: 0, design: .default)

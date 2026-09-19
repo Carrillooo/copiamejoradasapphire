@@ -73,14 +73,18 @@ struct FocusWidgetView: View {
             }
 
             VStack(alignment: .leading, spacing: 1) {
+                // La cuenta atrás es una cifra y va con el estilo de cifra; el
+                // nombre es una palabra y va con el de título. Usar `metric`
+                // para ambos hacía que "Concentración" dominara toda la fila.
                 Group {
                     if focusManager.isSessionActive {
                         FocusWidgetCountdownText(focusManager: focusManager)
+                            .irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
                     } else {
                         Text("Concentración")
+                            .irisText(Iris.Notch.title, color: Iris.Notch.textPrimary)
                     }
                 }
-                .irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
                 .lineLimit(1)
                 .animation(Iris.Motion.standard, value: focusManager.isSessionActive)
 

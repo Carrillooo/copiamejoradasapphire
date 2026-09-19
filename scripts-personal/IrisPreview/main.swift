@@ -300,7 +300,7 @@ private struct NotchSpecimen: View {
                                                 startPoint: .topLeading, endPoint: .bottomTrailing))
                 .frame(width: 40)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Concentración").irisText(Iris.Notch.metric, color: Iris.Notch.textPrimary)
+                Text("Concentración").irisText(Iris.Notch.title, color: Iris.Notch.textPrimary)
                 Text("Listo para empezar")
                     .irisText(Iris.Notch.label, color: Iris.Notch.textSecondary)
                 Text("90 min · 00:00 hoy")
