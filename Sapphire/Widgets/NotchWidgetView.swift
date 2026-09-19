@@ -105,7 +105,12 @@ struct NotchWidgetView: View {
     }
     @State private var displayedMode: NotchWidgetMode = .defaultWidgets
 
-    @State private var blurRadius: CGFloat = 20
+    // El desenfoque de apertura se ha eliminado. Se animaba de 20 a 0 durante
+    // 0,6 s sobre TODO el contenido del notch, recalculando un desenfoque
+    // gaussiano de la superficie entera en cada frame, y justo a la vez que la
+    // animación de tamaño que ya reproponía el layout de todo el árbol. Era el
+    // tirón que se notaba al abrirlo. La escala y la opacidad de debajo ya dan
+    // la sensación de entrada sin ese coste.
     @State private var isScaledIn: Bool = false
     @State private var isFadedIn: Bool = false
     @State private var isPositioned: Bool = false
@@ -119,7 +124,6 @@ struct NotchWidgetView: View {
             contentSwitch(for: displayedMode)
                 .id(displayedMode)
                 .compositingGroup()
-                .blur(radius: blurRadius)
                 .scaleEffect(isScaledIn ? 1.0 : 0.7, anchor: .top)
                 .opacity(isFadedIn ? 1.0 : 0.0)
                 .offset(y: isPositioned ? 0 : -50)
@@ -145,14 +149,10 @@ struct NotchWidgetView: View {
                 self.isPositioned = true
                 self.isFadedIn = true
             }
-            withAnimation(.easeOut(duration: 0.6)) {
-                self.blurRadius = 0
-            }
         }
         .onChange(of: currentMode) {
             withAnimation(.easeIn(duration: 0.2)) {
                 self.isFadedIn = false
-                self.blurRadius = 20
             }
 
             self.displayedMode = self.currentMode
@@ -170,9 +170,6 @@ struct NotchWidgetView: View {
                 self.isScaledIn = true
                 self.isPositioned = true
                 self.isFadedIn = true
-            }
-            withAnimation(.easeOut(duration: 0.6)) {
-                self.blurRadius = 0
             }
         }
         .notchHorizontalPadding()

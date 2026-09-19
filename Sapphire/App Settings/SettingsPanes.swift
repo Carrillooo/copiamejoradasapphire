@@ -27,8 +27,11 @@ struct SettingsDetailView: View {
                 settingsPane(for: selectedSection)
             }
         }
-        .animation(.easeOut(duration: 0.15), value: selectedSection)
-        .animation(.easeOut(duration: 0.15), value: subscriptionManager.activeTier)
+        // Sin animación al cambiar de sección. Animar este contenedor hace que
+        // SwiftUI mantenga vivos el panel saliente y el entrante durante la
+        // transición y los mida a los dos en cada frame: el doble de layout
+        // justo en el momento en que el usuario espera respuesta inmediata.
+        // El cambio de sección quiere ser instantáneo, no bonito.
     }
 
     @ViewBuilder

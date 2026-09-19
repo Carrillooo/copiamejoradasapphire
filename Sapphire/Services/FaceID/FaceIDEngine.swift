@@ -215,7 +215,13 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
     @Published var appState: CameraState = .idle
     @Published var userInstruction: String = "Press 'Register' to begin."
     @Published var faceIsRecognized: Bool = false
-    @Published var smoothedBoundingBox: CGRect?
+    // `smoothedBoundingBox` se ha eliminado. Era @Published, se escribía en
+    // CADA fotograma (~30/s) desde DispatchQueue.main.async y no la leía nadie.
+    // @Published notifica a todos los observadores del objeto se lea o no la
+    // propiedad, así que reconstruía la vista de registro entera —anillo de 48
+    // cápsulas incluido— 30 veces por segundo, y con ella updateNSView, que
+    // hace dos saltos SÍNCRONOS del hilo principal a la cola de la sesión de
+    // captura. Ésa era la causa principal de "va muy lenta".
     @Published var registrationProgress: Double = 0.0
     @Published var holdProgress: Double = 0.0
     @Published var registrationPoseCaptured: Set<String> = []
@@ -613,7 +619,6 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
 
         guard let obs = faceLandmarksRequest.results?.first else {
             DispatchQueue.main.async {
-                self.smoothedBoundingBox = nil
                 if self.isRegistrationMode {
                     self.userInstruction = "Position your face in the camera view."
                     if !self.accumulatedEmbeddings.isEmpty { self.accumulatedEmbeddings.removeLast() }
@@ -623,7 +628,6 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         }
 
         if let quality = obs.faceCaptureQuality, quality < 0.10 { return }
-        DispatchQueue.main.async { self.smoothedBoundingBox = obs.boundingBox }
 
         if isRegistrationMode {
             handleRegistration(observation: obs, pixelBuffer: pixelBuffer)

@@ -29,17 +29,40 @@ public enum Iris {}
 // MARK: - Accesibilidad del sistema
 
 public extension Iris {
-    /// Preferencias de accesibilidad de macOS, consultadas en el momento.
+    /// Preferencias de accesibilidad de macOS.
+    ///
+    /// Cacheadas a propósito. Antes cada propiedad consultaba NSWorkspace en el
+    /// momento, y como `IrisSurface` las lee en su `body`, eso eran 129
+    /// lecturas síncronas a NSWorkspace por cada reconstrucción de la ventana
+    /// de ajustes, en el hilo principal. Ahora se leen una vez y se refrescan
+    /// cuando el sistema avisa de que han cambiado —que además arregla que
+    /// antes la interfaz no reaccionaba a cambiarlas en caliente.
     enum A11y {
-        public static var reduceMotion: Bool {
-            NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        private final class Store {
+            static let shared = Store()
+            private(set) var reduceMotion = false
+            private(set) var reduceTransparency = false
+            private(set) var increaseContrast = false
+
+            private init() {
+                refresh()
+                NotificationCenter.default.addObserver(
+                    forName: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification,
+                    object: nil, queue: .main
+                ) { [weak self] _ in self?.refresh() }
+            }
+
+            func refresh() {
+                let ws = NSWorkspace.shared
+                reduceMotion = ws.accessibilityDisplayShouldReduceMotion
+                reduceTransparency = ws.accessibilityDisplayShouldReduceTransparency
+                increaseContrast = ws.accessibilityDisplayShouldIncreaseContrast
+            }
         }
-        public static var reduceTransparency: Bool {
-            NSWorkspace.shared.accessibilityDisplayShouldReduceTransparency
-        }
-        public static var increaseContrast: Bool {
-            NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
-        }
+
+        public static var reduceMotion: Bool { Store.shared.reduceMotion }
+        public static var reduceTransparency: Bool { Store.shared.reduceTransparency }
+        public static var increaseContrast: Bool { Store.shared.increaseContrast }
     }
 }
 
@@ -266,12 +289,16 @@ public extension Iris {
         }
 
         /// Las superficies grandes leen como más gruesas: sombra más profunda.
+        ///
+        /// Los radios bajaron (antes 18/24/10/30). El coste de un desenfoque
+        /// crece con el radio, y a partir de cierto punto la diferencia deja de
+        /// percibirse pero se sigue pagando en cada frame.
         var shadowRadius: CGFloat {
             switch self {
-            case .chrome:  return 18
-            case .panel:   return 24
-            case .control: return 10
-            case .overlay: return 30
+            case .chrome:  return 8
+            case .panel:   return 10
+            case .control: return 5
+            case .overlay: return 14
             }
         }
 
@@ -294,20 +321,28 @@ private struct IrisSurface<S: InsettableShape>: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                if Iris.A11y.reduceTransparency {
-                    // Con «reducir transparencia» el material desaparece: se
-                    // sustituye por una superficie sólida, no por un blur flojo.
-                    shape.fill(Iris.Palette.surfaceRaised)
-                } else {
-                    shape.fill(level.material)
-                    if tinted { shape.fill(Iris.Palette.accentMuted) }
-                }
+                // La sombra va DENTRO del background, sobre la forma.
+                //
+                // Antes era un `.shadow` sobre el contenido ya compuesto, lo
+                // que obliga a Core Animation a rasterizar cada tarjeta —con su
+                // texto, sus interruptores y sus selectores— en una capa
+                // aparte para poder calcular la silueta. Con 129 tarjetas en
+                // los ajustes, eso es el coste dominante de la ventana.
+                //
+                // Sombreando la forma, la silueta ya se conoce: es un
+                // rectángulo redondeado. Y el radio baja de 24 a 10, porque el
+                // coste de un desenfoque crece con el radio.
+                shape
+                    .fill(Iris.A11y.reduceTransparency
+                          ? AnyShapeStyle(Iris.Palette.surfaceRaised)
+                          : AnyShapeStyle(level.material))
+                    .shadow(color: .black.opacity(Iris.A11y.reduceTransparency ? 0 : level.shadowOpacity),
+                            radius: level.shadowRadius, x: 0, y: level.shadowRadius / 3)
+                    .overlay { if tinted { shape.fill(Iris.Palette.accentMuted) } }
             }
             .overlay {
                 shape.strokeBorder(Iris.Palette.hairline, lineWidth: 1)
             }
-            .shadow(color: .black.opacity(Iris.A11y.reduceTransparency ? 0 : level.shadowOpacity),
-                    radius: level.shadowRadius, x: 0, y: level.shadowRadius / 3)
     }
 }
 

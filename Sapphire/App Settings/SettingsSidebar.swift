@@ -78,10 +78,11 @@ struct SettingsSidebarView: View {
                 .padding(.bottom, Iris.Spacing.md)
 
             IrisIdentityCardView(isSelected: showAccountPane) {
-                withAnimation(Iris.Motion.snappy) {
-                    showAccountPane = true
-                    selectedSection = nil
-                }
+                // Sin withAnimation: la transacción se propaga a TODO el
+                // árbol, incluido el panel de la derecha, y volvería a animar
+                // el cambio de sección que acabamos de quitar allí.
+                showAccountPane = true
+                selectedSection = nil
             }
 
             List(selection: Binding(
@@ -109,10 +110,8 @@ struct SettingsSidebarView: View {
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("SapphireSelectSection"))) { notification in
                 if let sectionName = notification.object as? String,
                    let section = SettingsSection(rawValue: sectionName) {
-                    withAnimation(Iris.Motion.snappy) {
-                        self.selectedSection = section
-                        self.showAccountPane = false
-                    }
+                    self.selectedSection = section
+                    self.showAccountPane = false
                 }
             }
 
