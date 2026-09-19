@@ -436,7 +436,7 @@ class HelperManager: ObservableObject {
             helperLogger.info("[HelperManager] Helper protocol version query failed")
             return false
         }
-        helperLogger.info("[HelperManager] Helper protocol version: running=\(running) expected=\(IrisHelperProtocolVersion)")
+        helperLogger.info("[HelperManager] Helper protocol version: running=\(running) expected=\(SapphireHelperProtocolVersion)")
         return running == SapphireHelperProtocolVersion
     }
 
