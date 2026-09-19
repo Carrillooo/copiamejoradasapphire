@@ -371,9 +371,9 @@ final class StatusBarController {
         let menu = NSMenu()
         menu.addItem(withTitle: "Edit Menu Bar Items", action: #selector(enterEditMode), keyEquivalent: "").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Open Sapphire Setting", action: #selector(openPreferences), keyEquivalent: ",").target = self
+        menu.addItem(withTitle: "Open Iris Setting", action: #selector(openPreferences), keyEquivalent: ",").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Sapphire", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit Iris", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         return menu
     }
 
@@ -385,7 +385,7 @@ final class StatusBarController {
         }
         menu.addItem(withTitle: "Preferences", action: #selector(openPreferences), keyEquivalent: ",").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Sapphire", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Quit Iris", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         return menu
     }
 

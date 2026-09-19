@@ -38,7 +38,7 @@ enum OrphanedTapCleanup {
         }
 
         if destroyedCount == 0 {
-            logger.info("[CLEANUP] No orphaned Sapphire devices found")
+            logger.info("[CLEANUP] No orphaned Iris devices found")
         } else {
             logger.info("[CLEANUP] Destroyed \(destroyedCount) orphaned device(s)")
         }

@@ -56,7 +56,7 @@ enum FileDragPasteboard {
 
     private static func writeTextFile(_ text: String) -> URL? {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.shariq.Sapphire")
+            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.carrillo.iris")
             .appendingPathComponent("DroppedText")
             .appendingPathComponent(UUID().uuidString)
         let url = directory.appendingPathComponent("\(textFileName(for: text)).txt")

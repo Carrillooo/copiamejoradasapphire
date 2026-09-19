@@ -12,7 +12,9 @@ class KeychainManager {
     static let shared = KeychainManager()
     private init() {}
 
-    private let service = "com.shariq.Sapphire.faceid.keychain"
+    // Derivado del bundle: escrito a mano quedaba colgando del identificador
+    // del autor original y se desincronizaba al renombrar la app.
+    private let service = (Bundle.main.bundleIdentifier ?? "com.carrillo.iris") + ".faceid.keychain"
 
     func save(key: Data, for account: String) -> Bool {
         let status = KeychainStore.setItem(

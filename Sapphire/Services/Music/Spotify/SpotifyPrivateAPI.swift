@@ -1523,7 +1523,7 @@ class SpotifyPrivateAPIManager: ObservableObject {
     func transferPlayback(to toDeviceId: String) async -> Bool {
         if toDeviceId == controllerDeviceID {
             await MainActor.run {
-                self.deviceTransferNotice = "Sapphire is not a Spotify speaker. Choose the desktop app or another device."
+                self.deviceTransferNotice = "Iris is not a Spotify speaker. Choose the desktop app or another device."
                 self.scheduleDeviceTransferNoticeClear()
             }
             return false

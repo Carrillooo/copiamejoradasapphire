@@ -256,15 +256,15 @@ private struct HelperInstallationStepView: View {
     private var stepGuidance: String {
         switch helperManager.status {
         case .requiresApproval:
-            return "System Settings should be open. Under Allow in the Background, turn on both Sapphire and Sapphire Helper, then return here."
+            return "System Settings should be open. Under Allow in the Background, turn on both Iris and Iris Helper, then return here."
         case .enabled where !helperManager.isRunning:
-            return "The helper is approved but not responding. Tap Reset Helper so Sapphire can unregister its own background items and reinstall the helper."
+            return "The helper is approved but not responding. Tap Reset Helper so Iris can unregister its own background items and reinstall the helper."
         case .enabled:
             return "Helper is ready. You can continue."
         case .notFound:
-            return "macOS lost the helper registration (SAP-H3). Tap Reset Helper to rebuild it; Sapphire relaunches itself if the helper stays stuck."
+            return "macOS lost the helper registration (SAP-H3). Tap Reset Helper to rebuild it; Iris relaunches itself if the helper stays stuck."
         default:
-            return "Tap Install Helper. Approve the macOS prompt, then enable Sapphire under System Settings → General → Login Items → Background Activity."
+            return "Tap Install Helper. Approve the macOS prompt, then enable Iris under System Settings → General → Login Items → Background Activity."
         }
     }
 
@@ -857,7 +857,7 @@ private struct FinishStepView: View {
                     Image(systemName: "link").resizable().aspectRatio(contentMode: .fit).frame(width: 18, height: 18).foregroundColor(.white).padding(6).background(Color.blue).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }.buttonStyle(PlainButtonStyle())
 
-                Link(destination: URL(string: "https://github.com/cshariq/Sapphire")!) {
+                Link(destination: URL(string: "https://github.com/Carrillooo/copiamejoradasapphire")!) {
                     Image("github_logo").resizable().renderingMode(.template).aspectRatio(contentMode: .fit).frame(width: 18, height: 18).foregroundColor(.white).padding(6).background(Color.black).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }.buttonStyle(PlainButtonStyle())
 

@@ -529,7 +529,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
             window.standardWindowButton(.closeButton)?.isHidden = true
             window.standardWindowButton(.miniaturizeButton)?.isHidden = true
             window.standardWindowButton(.zoomButton)?.isHidden = true
-            window.title = "Sapphire Onboarding"
+            window.title = "Iris Onboarding"
             window.isMovableByWindowBackground = true
             window.isOpaque = false
             window.backgroundColor = .clear
@@ -914,7 +914,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
         DispatchQueue.main.async {
             HelperAlertPresenter.presentModal(
-                messageText: "Signed Out of Sapphire",
+                messageText: "Signed Out of Iris",
                 informativeText: reason.alertMessage,
                 alertStyle: .warning,
                 buttonTitles: ["Open Account Settings", "OK"]
@@ -1245,12 +1245,12 @@ class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDele
 
                 statusItem?.button?.image = NSImage(
                     systemSymbolName: "square.grid.3x3.fill",
-                    accessibilityDescription: "Sapphire Launchpad"
+                    accessibilityDescription: "Iris Launchpad"
                 )
                 let menu = NSMenu()
                 menu.addItem(NSMenuItem(title: "Show Launchpad", action: #selector(showLaunchpadAction), keyEquivalent: ""))
                 menu.addItem(.separator())
-                menu.addItem(NSMenuItem(title: "Quit Sapphire", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+                menu.addItem(NSMenuItem(title: "Quit Iris", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
                 for item in menu.items { item.target = self }
                 statusItem?.menu = menu
             }

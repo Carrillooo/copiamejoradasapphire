@@ -1340,7 +1340,7 @@ struct NotchController: View {
             : dragState.isDraggingFromShelf
         fallbackDropZone = activeDropZone ?? (wasDraggedFromShelf ? nil : .shelf)
         let temporaryRoot = fileManager.temporaryDirectory
-            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.shariq.Sapphire")
+            .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.carrillo.iris")
             .appendingPathComponent("TemporaryDrop")
         let accessGrants = readableURLs.map { url in
             (url: url, shouldStopAccessing: url.startAccessingSecurityScopedResource())

@@ -27,7 +27,8 @@ class FileShelfManager: ObservableObject {
         guard let appSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
             fatalError("Could not find Application Support directory.")
         }
-        storageURL = appSupportURL.appendingPathComponent("com.shariq.Sapphire.FileShelf")
+        storageURL = appSupportURL.appendingPathComponent(
+            (Bundle.main.bundleIdentifier ?? "com.carrillo.iris") + ".FileShelf")
 
         if !fileManager.fileExists(atPath: storageURL.path) {
             try? fileManager.createDirectory(at: storageURL, withIntermediateDirectories: true, attributes: nil)

@@ -42,9 +42,9 @@ enum HelperIssue: Equatable {
         case .spawnFailed:
             return "Permission is granted, but macOS still will not launch the helper."
         case .needsApproval:
-            return "Turn on Sapphire and Sapphire Helper in Login Items."
+            return "Turn on Iris and Iris Helper in Login Items."
         case .notFound:
-            return "macOS lost the helper (status 3). Reset the helper; Sapphire will relaunch if it stays stuck."
+            return "macOS lost the helper (status 3). Reset the helper; Iris will relaunch if it stays stuck."
         }
     }
 
@@ -57,10 +57,10 @@ enum HelperIssue: Equatable {
             macOS can't find the helper.
 
             Do fix this:
-            1. Click “Reset Helper” below. Sapphire will unregister the helper with SMAppService and register it again.
-            2. If the helper still does not start, Sapphire will relaunch itself — or click “Relaunch Sapphire”.
-            3. When Sapphire opens, click Install if asked.
-            4. In System Settings → General → Login Items, enable Sapphire Helper under Allow in the Background.
+            1. Click “Reset Helper” below. Iris will unregister the helper with SMAppService and register it again.
+            2. If the helper still does not start, Iris will relaunch itself — or click “Relaunch Iris”.
+            3. When Iris opens, click Install if asked.
+            4. In System Settings → General → Login Items, enable Iris Helper under Allow in the Background.
 
             Try Reset Helper first. Only relaunch the app if the helper is still stuck after that.
             """
@@ -72,17 +72,17 @@ enum HelperIssue: Equatable {
 
             Do this:
             1. Click “Open Login Items” below.
-            2. Under Allow in the Background, turn on Sapphire.
+            2. Under Allow in the Background, turn on Iris.
             3. Authenticate if macOS asks for your password.
-            4. Return to Sapphire and click Install / Activate.
+            4. Return to Iris and click Install / Activate.
             """
         case .spawnFailed:
             return """
             Error code: SAP-H1
 
-            Login Items permission is already granted (status 1), but macOS still will not start the helper. This usually means Sapphire’s own helper registration is stuck.
+            Login Items permission is already granted (status 1), but macOS still will not start the helper. This usually means Iris’s own helper registration is stuck.
 
-            Click “Reset Helper” below. Sapphire will unregister the helper and register it again, then relaunch if the helper is still having issues.
+            Click “Reset Helper” below. Iris will unregister the helper and register it again, then relaunch if the helper is still having issues.
             """
         }
     }
@@ -436,7 +436,7 @@ class HelperManager: ObservableObject {
             helperLogger.info("[HelperManager] Helper protocol version query failed")
             return false
         }
-        helperLogger.info("[HelperManager] Helper protocol version: running=\(running) expected=\(SapphireHelperProtocolVersion)")
+        helperLogger.info("[HelperManager] Helper protocol version: running=\(running) expected=\(IrisHelperProtocolVersion)")
         return running == SapphireHelperProtocolVersion
     }
 
@@ -480,7 +480,7 @@ class HelperManager: ObservableObject {
             return
         }
 
-        helperLogger.info("[HelperManager] Helper still not running; relaunching Sapphire to rebuild BTM")
+        helperLogger.info("[HelperManager] Helper still not running; relaunching Iris to rebuild BTM")
         HelperManager.relaunchApp()
     }
 

@@ -366,7 +366,7 @@ private struct DropZoneView: View {
 // MARK: - File Provider Conversion Logic
 
 fileprivate let temporaryDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
-    .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.shariq.Sapphire")
+    .appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.carrillo.iris")
 
 enum FileProviderError: Error, LocalizedError {
     case loadingFailed, noValidURLFound, duplicationFailed(Error)

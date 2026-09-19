@@ -261,11 +261,11 @@ public final class CGSSpace {
 // MARK: - System HUD Management (Sapphire's placeholder)
 class SapphireOSDManager {
     static func disableSystemHUD() {
-        print("[SapphireOSDManager] LOG: `disableSystemHUD` called.")
+        print("[IrisOSDManager] LOG: `disableSystemHUD` called.")
     }
 
     static func enableSystemHUD() {
-        print("[SapphireOSDManager] LOG: `enableSystemHUD` called.")
+        print("[IrisOSDManager] LOG: `enableSystemHUD` called.")
     }
 }
 

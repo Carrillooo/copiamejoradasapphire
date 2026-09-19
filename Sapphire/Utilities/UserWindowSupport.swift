@@ -26,7 +26,7 @@ enum SapphireStandardMenu {
         let appMenu = NSMenu()
         appMenuItem.submenu = appMenu
         appMenu.addItem(
-            withTitle: "Quit Sapphire",
+            withTitle: "Quit Iris",
             action: #selector(NSApplication.terminate(_:)),
             keyEquivalent: "q"
         )
@@ -173,11 +173,11 @@ enum HelperAlertPresenter {
 
     static func showHelperConnectionLost(onDismiss: (() -> Void)? = nil) {
         presentModal(
-            messageText: "Sapphire Helper Needs Attention",
+            messageText: "Iris Helper Needs Attention",
             informativeText: """
-            Sapphire lost connection to its system helper.
+            Iris lost connection to its system helper.
 
-            Click “Reset Helper” to unregister Sapphire’s own background items, reinstall the helper, and relaunch. Other apps are not affected.
+            Click “Reset Helper” to unregister Iris’s own background items, reinstall the helper, and relaunch. Other apps are not affected.
             """,
             alertStyle: .warning,
             buttonTitles: ["Reset Helper", "OK"]
@@ -193,7 +193,7 @@ enum HelperAlertPresenter {
         let buttons: [String]
         switch issue {
         case .notFound:
-            buttons = ["Reset Helper", "Relaunch Sapphire", "OK"]
+            buttons = ["Reset Helper", "Relaunch Iris", "OK"]
         case .needsApproval:
             buttons = ["Open Login Items", "OK"]
         case .spawnFailed:
@@ -201,7 +201,7 @@ enum HelperAlertPresenter {
         }
 
         presentModal(
-            messageText: "Sapphire Helper  ·  \(issue.code)",
+            messageText: "Iris Helper  ·  \(issue.code)",
             informativeText: issue.instructions,
             alertStyle: issue == .spawnFailed ? .critical : .warning,
             buttonTitles: buttons

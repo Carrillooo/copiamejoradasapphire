@@ -17,8 +17,13 @@ final class FocusWebsiteBlocker {
     private let pageServer = FocusBlockPageServer()
     private var productiveAccessValidator: ((String) -> Bool)?
 
-    private static let hostsMarkerStart = "# >>> Sapphire Focus Block >>>"
-    private static let hostsMarkerEnd = "# <<< Sapphire Focus Block <<<"
+    private static let hostsMarkerStart = "# >>> Iris Focus Block >>>"
+    private static let hostsMarkerEnd = "# <<< Iris Focus Block <<<"
+    /// Marcadores que escribía la versión con el nombre anterior. Se siguen
+    /// reconociendo al limpiar: si no, los bloqueos ya escritos en /etc/hosts
+    /// se quedarían ahí y el usuario no podría quitarlos desde la app.
+    private static let legacyMarkerStart = "# >>> Sapphire Focus Block >>>"
+    private static let legacyMarkerEnd = "# <<< Sapphire Focus Block <<<"
 
     private init() {
         NotificationCenter.default.addObserver(
@@ -88,9 +93,16 @@ final class FocusWebsiteBlocker {
 
     nonisolated static func rewriting(_ hosts: String, with entries: [String]) -> String {
         var lines = hosts.components(separatedBy: "\n")
-        if let start = lines.firstIndex(of: hostsMarkerStart),
-           let end = lines[start...].firstIndex(of: hostsMarkerEnd) {
-            lines.removeSubrange(start...end)
+        // Se retiran los bloques propios y también los que dejó la versión con
+        // el nombre anterior: si sólo se buscara el marcador nuevo, esos
+        // bloqueos se quedarían en /etc/hosts para siempre y el usuario no
+        // podría quitarlos desde la aplicación.
+        for (inicio, fin) in [(hostsMarkerStart, hostsMarkerEnd),
+                              (legacyMarkerStart, legacyMarkerEnd)] {
+            while let start = lines.firstIndex(of: inicio),
+                  let end = lines[start...].firstIndex(of: fin) {
+                lines.removeSubrange(start...end)
+            }
         }
         if entries.count > 2 { lines.append(contentsOf: entries) }
         while let last = lines.last, last.isEmpty { lines.removeLast() }

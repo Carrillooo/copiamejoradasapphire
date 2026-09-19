@@ -1731,7 +1731,7 @@ struct SettingsBackupDocument: FileDocument {
         throw DecodingError.dataCorrupted(
             DecodingError.Context(
                 codingPath: [],
-                debugDescription: "The file could not be read as a Sapphire settings backup."
+                debugDescription: "The file could not be read as a Iris settings backup."
             )
         )
     }
@@ -3072,16 +3072,16 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .widgets: "Choose which widgets appear in the notch and how they are ordered."
         case .liveActivities: "Control which live activities can surface and auto-expand in the notch."
         case .appearance: "Tune the notch look, materials, colors, and layout styling."
-        case .lockScreen: "Configure Sapphire content and behavior while your Mac is locked."
+        case .lockScreen: "Configure Iris content and behavior while your Mac is locked."
         case .bluetoothUnlock: "Set up proximity-based authentication and trusted device behavior."
-        case .shortcuts: "Manage quick actions and shortcut surfaces shown in Sapphire."
-        case .keyboardShortcuts: "Reference page listing every keyboard shortcut in Sapphire — global hotkeys, snap zones, and in-app shortcuts."
+        case .shortcuts: "Manage quick actions and shortcut surfaces shown in Iris."
+        case .keyboardShortcuts: "Reference page listing every keyboard shortcut in Iris — global hotkeys, snap zones, and in-app shortcuts."
         case .snapZones: "Configure window snapping behavior, layouts, and zone actions."
         case .audio: "Audio adjustments, EQ, and per-app volume adjustments."
         case .battery: "Battery widgets, history, charging preferences, and power-related controls."
         case .bluetooth: "Bluetooth device integrations, visibility, and connection behavior."
         case .hud: "Heads-up display overlays for volume, brightness, keyboard, and media feedback."
-        case .notifications: "Choose which system notifications Sapphire mirrors or enhances."
+        case .notifications: "Choose which system notifications Iris mirrors or enhances."
         case .neardrop: "Nearby sharing preferences, transfers, and device discovery options."
         case .continuity: "Pair an Android phone for clipboard, notifications, media, battery, and Instant Hotspot."
         case .fileShelf: "Manage temporary file storage, drag targets, and shelf behavior."
@@ -3100,13 +3100,13 @@ enum SettingsSection: String, CaseIterable, Identifiable {
         case .eyeBreak: "Break reminders, timing, and focus nudges for healthier screen habits."
         case .focusSession: "Session-style focus mode with timers, app/website blocking, and session history."
         case .appLock: "Lock apps behind Touch ID or password — blur overlays, idle/sleep auto-lock, and auto-close."
-        case .intelligence: "Sapphire Blip — Mac agent with memory, skills, tools, and computer use."
+        case .intelligence: "Iris Blip — Mac agent with memory, skills, tools, and computer use."
         case .sports: "Sports widget settings, favorite teams selection, and scoreboard configurations."
         case .finance: "Stock market ticker configurations, favorite stocks, and trendline visualizations."
         case .dockLayouts: "Save Dock layouts as presets and switch between them with a click or hotkey."
         case .mediaOptimizer: "Automatically shrink images, compress media, and extract text with OCR."
 
-        case .about: "App version details, Sapphire updates, release channels, credits, links, and project information."
+        case .about: "App version details, Iris updates, release channels, credits, links, and project information."
         }
     }
 

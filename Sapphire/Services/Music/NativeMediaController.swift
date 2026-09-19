@@ -114,6 +114,14 @@ struct TrackInfo: Equatable {
 
 @MainActor
 final class NativeMediaController: NSObject {
+
+    /// Ruta relativa del adaptador dentro del bundle, sea cual sea el nombre
+    /// de la aplicación.
+    private static let adapterRelativePath: String = {
+        let name = Bundle.main.bundleURL.lastPathComponent   // p. ej. "Iris.app"
+        return "\(name)/Contents/Resources/mediaremote-adapter.pl"
+    }()
+
     private struct SendableMetadata: @unchecked Sendable {
         let value: [String: Any]
     }
@@ -188,7 +196,11 @@ final class NativeMediaController: NSObject {
                 let fields = line.split(separator: " ", maxSplits: 2, omittingEmptySubsequences: true)
                 guard fields.count == 3,
                       let pid = pid_t(fields[0]), fields[1] == "1",
-                      fields[2].contains("Sapphire.app/Contents/Resources/mediaremote-adapter.pl"),
+                      // La ruta se deriva del bundle, no se escribe a mano: con el
+                      // nombre fijo "Iris.app" esto dejó de encontrar nada al
+                      // renombrar la app, y los procesos huérfanos del adaptador
+                      // se quedaban vivos para siempre.
+                      fields[2].contains(Self.adapterRelativePath),
                       fields[2].contains(" stream") else { continue }
                 kill(pid, SIGTERM)
             }

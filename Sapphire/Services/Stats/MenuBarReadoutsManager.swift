@@ -127,7 +127,7 @@ final class MenuBarReadoutsManager {
         } else {
             button.title = parts.joined(separator: "  ")
         }
-        button.toolTip = "Sapphire readouts — CPU, RAM, network rates"
+        button.toolTip = "Iris readouts — CPU, RAM, network rates"
     }
 
     private static func formatRate(_ bytesPerSecond: Double) -> String {

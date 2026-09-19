@@ -2844,7 +2844,7 @@ class MusicManager: ObservableObject {
 
             if let databaseLyrics {
                 LyricsLog.info(
-                    "Lyrics applied from Sapphire database for '\(title)': \(databaseLyrics.count) lines (\(databaseLyrics.filter(\.hasWordTiming).count) word-synced)"
+                    "Lyrics applied from Iris database for '\(title)': \(databaseLyrics.count) lines (\(databaseLyrics.filter(\.hasWordTiming).count) word-synced)"
                 )
                 self.replaceLyrics(databaseLyrics)
                 self.lyricsCache[cacheKey] = databaseLyrics

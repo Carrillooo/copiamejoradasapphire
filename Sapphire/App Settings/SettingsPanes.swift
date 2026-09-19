@@ -10266,7 +10266,7 @@ struct AboutSettingsView: View {
                             }
                             .buttonStyle(PlainButtonStyle())
 
-                            Link(destination: URL(string: "https://github.com/cshariq/Sapphire")!) {
+                            Link(destination: URL(string: "https://github.com/Carrillooo/copiamejoradasapphire")!) {
                                 Image("github_logo")
                                     .resizable()
                                     .renderingMode(.template)
