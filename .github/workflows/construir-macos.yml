@@ -65,9 +65,12 @@ jobs:
           xcodebuild -showsdks | grep -i macos || true
 
       - name: Restaurar binarios opcionales de upstream
-        # No bloquea la compilación: lo necesario para compilar está en el repo.
-        # Esto sólo añade el modelo de reconocimiento facial. Si falla, la app
-        # se compila igual, sin reconocimiento facial.
+        # No bloquea aquí: lo necesario para COMPILAR está en el repo, y este
+        # paso también trae vídeos de demostración que no hacen falta.
+        #
+        # Pero el modelo de reconocimiento facial sí hace falta, y sin él la app
+        # se instalaría con un Face ID que no puede funcionar. De eso se encarga
+        # el paso «Meter el modelo facial en la app», que sí rompe el build.
         continue-on-error: true
         run: ./scripts-personal/restaurar-binarios.sh
 
@@ -95,6 +98,44 @@ jobs:
             ONLY_ACTIVE_ARCH=NO \
             $EXTRA \
             build 2>&1 | tee build.log
+
+      - name: Meter el modelo facial en la app
+        # Xcode no incluye `ArcFace.mlpackage` en el paquete, aunque esté en
+        # disco dentro de la carpeta sincronizada. Y aunque lo incluyera, el
+        # cargador de la huella facial hace `MLModel(contentsOf:)`, que sólo
+        # abre modelos YA COMPILADOS: un .mlpackage hay que compilarlo antes.
+        #
+        # Así que se compila aquí, a `.mlmodelc`, y se mete en Resources. Eso
+        # rompe la firma del paquete, de modo que se vuelve a firmar con las
+        # MISMAS entitlements que usó el build: firmar sin ellas dejaría la app
+        # sin permisos y no abriría.
+        run: |
+          set -euo pipefail
+          APP="$(find build/Build/Products/Release -maxdepth 1 -name '*.app' | head -1)"
+          PKG="Sapphire/Services/FaceID/Models/ArcFace.mlpackage"
+
+          if [ -z "$APP" ]; then
+            echo "No se encuentra la .app compilada." >&2
+            exit 1
+          fi
+          if [ ! -d "$PKG" ]; then
+            echo "No está $PKG: el paso de restauración no ha traído el modelo." >&2
+            exit 1
+          fi
+
+          if [ -d "$APP/Contents/Resources/ArcFace.mlmodelc" ]; then
+            echo "El modelo ya estaba dentro; no hace falta tocar nada."
+            exit 0
+          fi
+
+          echo "Compilando el modelo a .mlmodelc…"
+          xcrun coremlcompiler compile "$PKG" "$APP/Contents/Resources"
+
+          echo "Volviendo a firmar la app (añadir un recurso invalida el sello)…"
+          codesign --force --sign - \
+            --entitlements Sapphire/Sapphire-adhoc.entitlements \
+            "$APP"
+          codesign --verify --verbose=2 "$APP"
 
       - name: Comprobar que el modelo facial va dentro de la app
         # El paso de restauración es `continue-on-error`, y Xcode incluye los

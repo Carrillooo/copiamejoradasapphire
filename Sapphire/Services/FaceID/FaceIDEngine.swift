@@ -1875,13 +1875,51 @@ final class FaceIDModelManager: ObservableObject {
     }
 
     private func loadModelWithIO(_ name: String, preferredOutput: String?) -> (MLModel, String, String)? {
-        guard let url = locateResource(name: name, ext: "mlmodelc") ?? locateResource(name: name, ext: "mlpackage") else { return nil }
         let cfg = MLModelConfiguration(); cfg.computeUnits = .all
+
+        // Un `.mlpackage` NO se puede abrir con `MLModel(contentsOf:)`: hay que
+        // compilarlo antes. Aquí se buscaban las dos formas pero se abrían
+        // igual, así que si el modelo llegaba sin compilar esto devolvía nil en
+        // silencio y el reconocimiento facial no funcionaba —sin un mensaje, ni
+        // en la pantalla ni en el registro—. El cargador del modelo de liveness
+        // sí compilaba; éste no.
+        let url: URL
+        if let compiled = locateResource(name: name, ext: "mlmodelc") {
+            url = compiled
+        } else if let package = locateResource(name: name, ext: "mlpackage") {
+            guard let compiled = compiledModelURL(forPackageAt: package, name: name) else { return nil }
+            url = compiled
+        } else {
+            return nil
+        }
+
         guard let model = try? MLModel(contentsOf: url, configuration: cfg) else { return nil }
         guard let inputName = model.modelDescription.inputDescriptionsByName.keys.first else { return nil }
         let outputs = model.modelDescription.outputDescriptionsByName
         let outputName = (preferredOutput != nil && outputs[preferredOutput!] != nil) ? preferredOutput! : (outputs.keys.first ?? "")
         return (model, inputName, outputName)
+    }
+
+    /// Compila un `.mlpackage` y guarda el resultado en la caché del usuario.
+    ///
+    /// `MLModel.compileModel(at:)` deja el resultado en una carpeta temporal que
+    /// el sistema puede borrar en cualquier momento, así que se copia a un sitio
+    /// estable. Compilar el modelo de huella facial tarda lo suyo: hacerlo en
+    /// cada arranque se notaría.
+    private func compiledModelURL(forPackageAt packageURL: URL, name: String) -> URL? {
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("com.sapphire.faceid", isDirectory: true)
+        try? FileManager.default.createDirectory(at: cacheDir, withIntermediateDirectories: true)
+        let cached = cacheDir.appendingPathComponent("\(name).mlmodelc", isDirectory: true)
+
+        if FileManager.default.fileExists(atPath: cached.path) { return cached }
+
+        guard let temporary = try? MLModel.compileModel(at: packageURL) else { return nil }
+        // Si la copia falla, se usa la temporal: peor que la caché, pero mejor
+        // que quedarse sin modelo.
+        try? FileManager.default.removeItem(at: cached)
+        guard (try? FileManager.default.copyItem(at: temporary, to: cached)) != nil else { return temporary }
+        return cached
     }
 
     private func getAntiSpoofBuffer() -> CVPixelBuffer? {
