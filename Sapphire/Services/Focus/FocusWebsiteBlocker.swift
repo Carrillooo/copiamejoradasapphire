@@ -14,6 +14,24 @@ final class FocusWebsiteBlocker {
 
     private(set) var isActive = false
     private(set) var blockedDomains: Set<String> = []
+
+    /// `true` cuando el bloqueo por /etc/hosts puede aplicarse ahora mismo.
+    ///
+    /// Escribir en /etc/hosts necesita el ayudante con permisos de
+    /// administrador. Si no está vivo, el bloqueo no ocurre, y la sesión de
+    /// concentración no debe dar a entender que sí.
+    static var hostsBlockingIsAvailable: Bool {
+        HelperManager.shared.isRunning
+    }
+
+    /// `true` cuando esta copia de Iris NUNCA podrá bloquear webs.
+    ///
+    /// Es distinto de que el ayudante esté caído en este momento: aquello se
+    /// arregla, esto no. Los ajustes usan éste, porque es un hecho fijo de la
+    /// copia instalada y no cambia mientras el panel está abierto.
+    static var hostsBlockingIsPossible: Bool {
+        IrisCodeSignature.canRunPrivilegedHelper
+    }
     private let pageServer = FocusBlockPageServer()
     private var productiveAccessValidator: ((String) -> Bool)?
 
@@ -110,16 +128,26 @@ final class FocusWebsiteBlocker {
     }
 
     private func writeHosts(entries: [String]) {
-        guard HelperManager.shared.status == .enabled else { return }
-        XPCClient.shared.helper?.writeHostsEntries(entries) { success in
-            if !success { print("[FocusWebsiteBlocker] Helper failed to update /etc/hosts.") }
+        // Antes se miraba `status == .enabled`, que sólo dice que el ayudante
+        // esté registrado y autorizado, no que esté vivo. Registrado y muerto
+        // es justo el caso de una copia firmada ad-hoc: la comprobación pasaba,
+        // `helper` era nil, el `?.` se comía la llamada y el bloqueo se daba
+        // por hecho sin haber ocurrido.
+        guard Self.hostsBlockingIsAvailable, let helper = XPCClient.shared.helper else {
+            print("[FocusWebsiteBlocker] El ayudante no está disponible: no se bloquea por /etc/hosts.")
+            return
+        }
+        helper.writeHostsEntries(entries) { success in
+            if !success { print("[FocusWebsiteBlocker] El ayudante no pudo actualizar /etc/hosts.") }
         }
     }
 
     private func removeHostsEntriesAndFlush() {
-        guard HelperManager.shared.status == .enabled else { return }
+        // Al limpiar no se comprueba el estado: si quedaron entradas escritas y
+        // el ayudante sigue ahí, hay que quitarlas. Dejarlas bloquearía esos
+        // dominios para siempre, incluso con Iris cerrada.
         XPCClient.shared.helper?.removeHostsEntries { success in
-            if !success { print("[FocusWebsiteBlocker] Helper failed to remove /etc/hosts entries.") }
+            if !success { print("[FocusWebsiteBlocker] El ayudante no pudo limpiar /etc/hosts.") }
         }
     }
 }

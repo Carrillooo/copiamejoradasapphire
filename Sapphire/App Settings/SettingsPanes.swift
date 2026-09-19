@@ -12579,6 +12579,23 @@ struct FocusSessionSettingsView: View {
             sectionLabel("App & Website Blocking")
             ToggleRow(title: "Enable Blocking", description: "Block distracting apps and websites during focus sessions.", isOn: $settings.settings.focusBlockingEnabled)
             if settings.settings.focusBlockingEnabled {
+                // Bloquear APPS funciona siempre; bloquear WEBS se hace
+                // escribiendo en /etc/hosts, y eso necesita el ayudante con
+                // permisos. Decirlo aquí, y no callarlo, es la diferencia entre
+                // una limitación conocida y una sesión que el usuario cree
+                // protegida sin estarlo.
+                if !FocusWebsiteBlocker.hostsBlockingIsPossible {
+                    Divider().opacity(0.3).padding(.horizontal, 16)
+                    Label(
+                        "Sólo se bloquearán apps. Bloquear webs necesita el ayudante del sistema, que esta copia de Iris no puede usar.",
+                        systemImage: "exclamationmark.triangle.fill"
+                    )
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                }
+
                 Divider().opacity(0.3).padding(.horizontal, 16)
                 Picker("Blocking mode", selection: $settings.settings.focusBlockingMode) {
                     ForEach(FocusBlockingMode.allCases) { mode in

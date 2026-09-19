@@ -172,15 +172,20 @@ enum HelperAlertPresenter {
     private static var activeModalCount = 0
 
     static func showHelperConnectionLost(onDismiss: (() -> Void)? = nil) {
+        // Sin firma de desarrollador nunca hubo conexión que perder.
+        guard IrisCodeSignature.canRunPrivilegedHelper else {
+            onDismiss?()
+            return
+        }
         presentModal(
-            messageText: "Iris Helper Needs Attention",
+            messageText: "El ayudante de Iris necesita atención",
             informativeText: """
-            Iris lost connection to its system helper.
+            Iris ha perdido la conexión con su ayudante del sistema.
 
-            Click “Reset Helper” to unregister Iris’s own background items, reinstall the helper, and relaunch. Other apps are not affected.
+            Pulsa «Reinstalar ayudante» para darlo de baja y volver a registrarlo. No afecta a ninguna otra app.
             """,
             alertStyle: .warning,
-            buttonTitles: ["Reset Helper", "OK"]
+            buttonTitles: ["Reinstalar ayudante", "OK"]
         ) { index in
             if index == 0 {
                 HelperManager.shared.resetOwnBackgroundActivity()
@@ -190,14 +195,20 @@ enum HelperAlertPresenter {
     }
 
     static func present(_ issue: HelperIssue) {
+        // Un aviso modal existe para pedir una decisión. Si no hay ninguna que
+        // tomar, no se abre: lo que haya que explicar se explica en el panel.
+        guard issue.isActionable else { return }
+
         let buttons: [String]
         switch issue {
         case .notFound:
-            buttons = ["Reset Helper", "Relaunch Iris", "OK"]
+            buttons = ["Reinstalar ayudante", "Relanzar Iris", "OK"]
         case .needsApproval:
-            buttons = ["Open Login Items", "OK"]
+            buttons = ["Abrir Elementos de Inicio", "OK"]
         case .spawnFailed:
-            buttons = ["Reset Helper", "Open Login Items", "OK"]
+            buttons = ["Reinstalar ayudante", "Relanzar Iris", "OK"]
+        case .unsupportedBuild:
+            return
         }
 
         presentModal(
@@ -221,8 +232,10 @@ enum HelperAlertPresenter {
                 if index == 0 {
                     HelperManager.shared.resetOwnBackgroundActivity()
                 } else if index == 1 {
-                    SMAppService.openSystemSettingsLoginItems()
+                    HelperManager.relaunchApp()
                 }
+            case .unsupportedBuild:
+                break
             }
         }
     }

@@ -20,31 +20,44 @@ enum HelperIssue: Equatable {
     case spawnFailed
     case needsApproval
     case notFound
+    /// Esta copia va firmada ad-hoc: el ayudante no puede existir, no es una avería.
+    case unsupportedBuild
 
     var code: String {
         switch self {
         case .spawnFailed: return "SAP-H1"
         case .needsApproval: return "SAP-H2"
         case .notFound: return "SAP-H3"
+        case .unsupportedBuild: return "SAP-H4"
         }
     }
 
+    /// `true` si el usuario puede hacer algo al respecto.
+    ///
+    /// Distinguirlo importa: avisar de un problema que nadie puede arreglar
+    /// sólo molesta, y si además se ofrece un botón de reparación, se entra en
+    /// el bucle de reinstalar, fallar y volver a avisar.
+    var isActionable: Bool { self != .unsupportedBuild }
+
     var title: String {
         switch self {
-        case .spawnFailed: return "Helper cannot start"
-        case .needsApproval: return "Login Items approval required"
-        case .notFound: return "Helper registration missing"
+        case .spawnFailed: return "El ayudante no arranca"
+        case .needsApproval: return "Falta permiso en Elementos de Inicio"
+        case .notFound: return "Falta el registro del ayudante"
+        case .unsupportedBuild: return "Ayudante del sistema no disponible"
         }
     }
 
     var shortSummary: String {
         switch self {
         case .spawnFailed:
-            return "Permission is granted, but macOS still will not launch the helper."
+            return "El permiso está concedido, pero macOS sigue sin lanzar el ayudante."
         case .needsApproval:
-            return "Turn on Iris and Iris Helper in Login Items."
+            return "Activa Iris y el Ayudante de Iris en Elementos de Inicio."
         case .notFound:
-            return "macOS lost the helper (status 3). Reset the helper; Iris will relaunch if it stays stuck."
+            return "macOS ha perdido el ayudante (estado 3). Reinstálalo desde el botón."
+        case .unsupportedBuild:
+            return "Esta copia va firmada ad-hoc, así que macOS no permite el ayudante."
         }
     }
 
@@ -78,11 +91,21 @@ enum HelperIssue: Equatable {
             """
         case .spawnFailed:
             return """
-            Error code: SAP-H1
+            Código de error: SAP-H1
 
-            Login Items permission is already granted (status 1), but macOS still will not start the helper. This usually means Iris’s own helper registration is stuck.
+            El permiso de Elementos de Inicio ya está concedido (estado 1), pero macOS sigue sin arrancar el ayudante. Normalmente significa que el registro del ayudante se ha quedado atascado.
 
-            Click “Reset Helper” below. Iris will unregister the helper and register it again, then relaunch if the helper is still having issues.
+            Pulsa «Reinstalar ayudante». Iris lo dará de baja y lo volverá a registrar. Si aun así no arranca, usa «Relanzar Iris» tú mismo: Iris ya no se reinicia sola, porque reiniciarse para volver a fallar era lo que hacía que este aviso no parase de salir.
+            """
+        case .unsupportedBuild:
+            return """
+            Código de error: SAP-H4
+
+            \(IrisCodeSignature.unavailabilityReason)
+
+            No es algo que puedas arreglar desde aquí, y no afecta al resto de Iris. Lo único que queda fuera es lo que exige permisos de administrador: límite de carga de la batería, control de ventiladores, sensores del SMC y el bloqueo de webs por el fichero de hosts.
+
+            Para tenerlo haría falta compilar Iris con un certificado de desarrollador de Apple de pago y firmarla con él.
             """
         }
     }
@@ -92,6 +115,39 @@ struct HelperStatusBanner: View {
     @ObservedObject var helperManager: HelperManager
 
     var body: some View {
+        if helperManager.isSupportedInThisBuild {
+            actionableBanner
+        } else {
+            unsupportedNotice
+        }
+    }
+
+    /// Lo que se enseña cuando la firma de la app impide el ayudante.
+    ///
+    /// Una explicación y nada más: sin color de alarma, sin insignia de error y
+    /// sin botones, porque ninguno de los que había podría hacer nada.
+    private var unsupportedNotice: some View {
+        HStack(alignment: .top, spacing: 15) {
+            Image(systemName: "info.circle.fill")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+                .padding(.top, 2)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(HelperIssue.unsupportedBuild.title)
+                    .font(.headline)
+                Text(IrisCodeSignature.unavailabilityReason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 8)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var actionableBanner: some View {
         HStack(alignment: .top, spacing: 15) {
             Image(systemName: helperManager.bannerSymbol)
                 .font(.title2)
@@ -121,7 +177,7 @@ struct HelperStatusBanner: View {
 
             HStack(spacing: 8) {
                 if let issue = helperManager.lastIssue {
-                    Button("Instructions") {
+                    Button("Instrucciones") {
                         HelperAlertPresenter.present(issue)
                     }
                     .buttonStyle(.bordered)
@@ -129,32 +185,32 @@ struct HelperStatusBanner: View {
 
                 if !helperManager.isRunning {
                     if helperManager.status == .enabled {
-                        Button(helperManager.isResettingHelper ? "Resetting…" : "Reset Helper") {
+                        Button(helperManager.isResettingHelper ? "Reinstalando…" : "Reinstalar ayudante") {
                             helperManager.resetOwnBackgroundActivity()
                         }
                         .disabled(helperManager.isResettingHelper)
                         .buttonStyle(.borderedProminent)
                         .tint(.orange)
                     } else if helperManager.status == .notFound {
-                        Button(helperManager.isResettingHelper ? "Resetting…" : "Reset Helper") {
+                        Button(helperManager.isResettingHelper ? "Reinstalando…" : "Reinstalar ayudante") {
                             helperManager.resetOwnBackgroundActivity()
                         }
                         .disabled(helperManager.isResettingHelper)
                         .buttonStyle(.borderedProminent)
                         .tint(.orange)
-                        Button("Relaunch") {
+                        Button("Relanzar Iris") {
                             HelperManager.relaunchApp()
                         }
                         .buttonStyle(.bordered)
                     } else if helperManager.status == .requiresApproval {
-                        Button("Open Login Items") {
+                        Button("Abrir Elementos de Inicio") {
                             SMAppService.openSystemSettingsLoginItems()
                             helperManager.beginInstallation()
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.orange)
                     } else if helperManager.status != .enabled {
-                        Button("Install") {
+                        Button("Instalar") {
                             helperManager.beginInstallation()
                         }
                         .buttonStyle(.borderedProminent)
@@ -193,16 +249,19 @@ class HelperManager: ObservableObject {
             .appendingPathComponent(sapphireHelperPlistName, isDirectory: false)
     }
 
+    /// `false` cuando la firma de la app impide que macOS arranque el ayudante.
+    var isSupportedInThisBuild: Bool { IrisCodeSignature.canRunPrivilegedHelper }
+
     var bannerTitle: String {
-        if isRunning { return "Helper Active" }
-        return lastIssue?.title ?? "Helper Not Installed"
+        if isRunning { return "Ayudante activo" }
+        return lastIssue?.title ?? "Ayudante no instalado"
     }
 
     var bannerSubtitle: String {
         if isRunning {
-            return "Privileged helper is running."
+            return "El ayudante privilegiado está en marcha."
         }
-        return lastIssue?.shortSummary ?? "Install the helper to enable battery management and system integrations."
+        return lastIssue?.shortSummary ?? "Instala el ayudante para la gestión de batería y la integración con el sistema."
     }
 
     var bannerSymbol: String {
@@ -211,6 +270,8 @@ class HelperManager: ObservableObject {
         case .spawnFailed: return "exclamationmark.octagon.fill"
         case .needsApproval: return "exclamationmark.triangle.fill"
         case .notFound: return "arrow.triangle.2.circlepath.circle.fill"
+        // No es un fallo: es una capacidad que esta copia no tiene.
+        case .unsupportedBuild: return "info.circle.fill"
         case nil: return "xmark.circle.fill"
         }
     }
@@ -221,6 +282,7 @@ class HelperManager: ObservableObject {
         case .spawnFailed: return .red
         case .needsApproval: return .yellow
         case .notFound: return .orange
+        case .unsupportedBuild: return .secondary
         case nil: return .red
         }
     }
@@ -302,6 +364,10 @@ class HelperManager: ObservableObject {
     }
 
     private func refreshStatus() async -> SMAppService.Status {
+        guard isSupportedInThisBuild else {
+            applyStatus(.notRegistered)
+            return .notRegistered
+        }
         guard bundledPlistIsReadable() else {
             applyStatus(.notFound)
             return .notFound
@@ -358,6 +424,7 @@ class HelperManager: ObservableObject {
     }
 
     func checkIfRunning(force: Bool = false) {
+        guard isSupportedInThisBuild else { return }
         guard !isRegistering, !healthCheckInFlight else { return }
         let now = Date()
         guard force || now.timeIntervalSince(lastHealthCheck) >= healthCheckMinimumInterval else { return }
@@ -374,15 +441,17 @@ class HelperManager: ObservableObject {
     }
 
     func reactivateHelper() {
+        guard isSupportedInThisBuild else { return }
         Task { await registerHelper(userInitiated: true, forceReinstall: true) }
     }
 
     func resetOwnBackgroundActivity() {
-        guard !isResettingHelper else { return }
+        guard isSupportedInThisBuild, !isResettingHelper else { return }
         Task { await performOwnBackgroundActivityReset() }
     }
 
     func beginInstallation() {
+        guard isSupportedInThisBuild else { return }
         Task { @MainActor [weak self] in
             guard let self else { return }
             let currentStatus = await self.refreshStatus()
@@ -392,6 +461,7 @@ class HelperManager: ObservableObject {
     }
 
     func installIfNeeded() {
+        guard isSupportedInThisBuild else { return }
         Task { @MainActor [weak self] in
             guard let self else { return }
             let currentStatus = await self.refreshStatus()
@@ -480,12 +550,25 @@ class HelperManager: ObservableObject {
             return
         }
 
-        helperLogger.info("[HelperManager] Helper still not running; relaunching Iris to rebuild BTM")
-        HelperManager.relaunchApp()
+        // Aquí estaba el bucle: si el ayudante no levantaba, Iris se reiniciaba
+        // sola. Al arrancar de nuevo volvía a encontrarlo caído, volvía a
+        // avisar —con el registro de avisos ya vacío— y el usuario volvía a
+        // pulsar «Reinstalar». El aviso no paraba nunca.
+        //
+        // Relanzar sigue disponible, pero ahora lo decide el usuario desde el
+        // botón del propio aviso.
+        helperLogger.info("[HelperManager] Helper still not running after reset; leaving the relaunch to the user")
+        refreshIssue()
     }
 
     @discardableResult
     private func registerHelper(userInitiated: Bool, forceReinstall: Bool) async -> Bool {
+        // Registrar un demonio root pide autorización de administrador. No se
+        // le pide al usuario para instalar algo que macOS no va a arrancar.
+        guard isSupportedInThisBuild else {
+            refreshIssue()
+            return false
+        }
         if isRegistering { return false }
         if let last = lastRegisterAttempt, Date().timeIntervalSince(last) < registerCooldown, !userInitiated, !forceReinstall {
             return false
@@ -607,6 +690,13 @@ class HelperManager: ObservableObject {
             lastIssue = nil
             return
         }
+        // Antes que nada: si la firma no permite el ayudante, el estado que
+        // devuelva SMAppService da igual. Registrado y sin arrancar es
+        // exactamente lo que se espera, no un SAP-H1 que reparar.
+        guard isSupportedInThisBuild else {
+            lastIssue = .unsupportedBuild
+            return
+        }
         switch status {
         case .notFound:
             lastIssue = .notFound
@@ -622,6 +712,9 @@ class HelperManager: ObservableObject {
     }
 
     private func presentIssue(_ issue: HelperIssue, force: Bool) {
+        // Un aviso modal pide una acción. Si no hay ninguna que tomar, el aviso
+        // sólo interrumpe. Lo que haya que contar, se cuenta en el panel.
+        guard issue.isActionable else { return }
         if !force, presentedIssuesThisSession.contains(issue.code) { return }
         presentedIssuesThisSession.insert(issue.code)
         HelperAlertPresenter.present(issue)

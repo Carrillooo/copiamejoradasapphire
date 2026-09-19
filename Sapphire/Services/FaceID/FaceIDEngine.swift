@@ -80,9 +80,33 @@ enum FacePoseBucket: String, CaseIterable {
         }
     }
 
+    /// Márgenes de la pose frontal.
+    ///
+    /// Eran mucho más estrechos (yaw 0,15 = 8,6°; anchura de cara ≤ 0,34) y con
+    /// una cámara de portátil son difíciles de cumplir: va montada en el borde
+    /// superior de la pantalla, así que te mira desde arriba y en ángulo, y a
+    /// la distancia normal de trabajo la cara ocupa más de un tercio del
+    /// encuadre. Quien se sentara un poco cerca no podía registrar nunca.
+    ///
+    /// Ampliarlos no debilita nada: esto decide qué ángulos se GUARDAN como
+    /// plantilla, no con cuánto parecido se acepta un desbloqueo. Ese umbral
+    /// vive aparte y no se ha tocado.
+    private enum Center {
+        static let maxYaw = 0.22
+        static let maxRoll = 0.30
+        static let maxPitch = 0.35
+        static let minWidth: CGFloat = 0.08
+        static let maxWidth: CGFloat = 0.55
+    }
+
     func matches(yaw: Double, pitch: Double, roll: Double, faceWidth: CGFloat) -> Bool {
         switch self {
-        case .center: return abs(yaw) < 0.15 && abs(roll) < 0.25 && abs(pitch) < 0.25 && faceWidth >= 0.10 && faceWidth <= 0.34
+        case .center:
+            return abs(yaw) < Center.maxYaw
+                && abs(roll) < Center.maxRoll
+                && abs(pitch) < Center.maxPitch
+                && faceWidth >= Center.minWidth
+                && faceWidth <= Center.maxWidth
         case .left: return yaw < -0.10
         case .right: return yaw > 0.10
         case .up: return pitch > 0.08
@@ -92,6 +116,27 @@ enum FacePoseBucket: String, CaseIterable {
         case .closer: return faceWidth > 0.30
         case .farther: return faceWidth < 0.18 && faceWidth > 0.05
         }
+    }
+
+    /// Qué decirle al usuario cuando su cara no encaja en la pose pedida.
+    ///
+    /// `hint` describe la pose que se quiere; esto describe lo que hay que
+    /// CORREGIR, que no es lo mismo. Antes, estar demasiado cerca para la pose
+    /// frontal se anunciaba como «Centra la cara en el círculo»: el usuario ya
+    /// la tenía centrada, y el mensaje no le daba nada que hacer. Ese callejón
+    /// sin salida es lo que se ve en el vídeo del registro.
+    func correction(yaw: Double, pitch: Double, roll: Double, faceWidth: CGFloat) -> String {
+        guard self == .center else { return hint }
+
+        // En orden de importancia: primero encuadre, luego orientación.
+        if faceWidth > Center.maxWidth { return "Sepárate un poco de la cámara" }
+        if faceWidth < Center.minWidth { return "Acércate un poco a la cámara" }
+        if abs(yaw) >= Center.maxYaw { return "Mira de frente a la cámara" }
+        if abs(pitch) >= Center.maxPitch {
+            return pitch > 0 ? "Baja un poco la barbilla" : "Levanta un poco la barbilla"
+        }
+        if abs(roll) >= Center.maxRoll { return "Endereza la cabeza" }
+        return hint
     }
 }
 
@@ -185,27 +230,68 @@ enum AntiSpoofQualityGate {
     static let edgeMarginPixels = 5
 
     static func passes(observation: VNFaceObservation, pixelBuffer: CVPixelBuffer) -> Bool {
+        rejection(observation: observation, pixelBuffer: pixelBuffer) == nil
+    }
+
+    /// Motivo por el que se descarta el fotograma, o `nil` si vale.
+    ///
+    /// Antes esto devolvía sólo `true`/`false` y quien llamaba hacía `return`
+    /// sin decir nada. Con la cara pegada al borde —muy fácil en la cámara de
+    /// un portátil— se descartaban todos los fotogramas, en silencio y para
+    /// siempre: el anillo no avanzaba y no había forma de saber por qué.
+    static func rejection(observation: VNFaceObservation, pixelBuffer: CVPixelBuffer) -> String? {
         let w = CVPixelBufferGetWidth(pixelBuffer)
         let h = CVPixelBufferGetHeight(pixelBuffer)
         let bb = observation.boundingBox
 
         let faceW = Int(bb.width * CGFloat(w))
         let faceH = Int(bb.height * CGFloat(h))
-        guard min(faceW, faceH) >= minFacePixels else { return false }
+        guard min(faceW, faceH) >= minFacePixels else {
+            return "Acércate: se te ve la cara demasiado pequeña"
+        }
 
         let left = Int(bb.minX * CGFloat(w))
         let right = Int(bb.maxX * CGFloat(w))
         let top = Int((1.0 - bb.maxY) * CGFloat(h))
         let bottom = Int((1.0 - bb.minY) * CGFloat(h))
 
-        guard left >= edgeMarginPixels,
-              top >= edgeMarginPixels,
-              right <= w - edgeMarginPixels,
-              bottom <= h - edgeMarginPixels else { return false }
+        guard left >= edgeMarginPixels, right <= w - edgeMarginPixels else {
+            return "Colócate en el centro del encuadre"
+        }
+        guard top >= edgeMarginPixels else {
+            return "Se te corta la frente: baja un poco la pantalla"
+        }
+        guard bottom <= h - edgeMarginPixels else {
+            return "Se te corta la barbilla: sepárate o sube la pantalla"
+        }
 
-        if let quality = observation.faceCaptureQuality, quality < 0.10 { return false }
-        return true
+        if let quality = observation.faceCaptureQuality, quality < 0.10 {
+            return "Hace falta más luz sobre la cara"
+        }
+        return nil
     }
+}
+
+/// Por qué no se ha podido sacar la huella facial de un fotograma.
+enum EnrollmentEmbeddingFailure: Error, Equatable {
+    case alignmentFailed
+    case notSharp
+    case modelUnavailable
+    case internalError
+
+    /// Qué se le dice al usuario. Para `modelUnavailable` no se le pide que
+    /// mueva la cabeza: no es culpa suya y moverse no lo arregla.
+    var hint: String {
+        switch self {
+        case .alignmentFailed: return "No se distinguen bien los rasgos: prueba con más luz"
+        case .notSharp:        return "Imagen movida: quédate quieto un momento"
+        case .modelUnavailable: return "Falta el modelo de reconocimiento facial en esta copia de Iris"
+        case .internalError:   return "No se ha podido procesar la imagen"
+        }
+    }
+
+    /// `true` si el usuario no puede hacer nada por resolverlo.
+    var isFatal: Bool { self == .modelUnavailable }
 }
 
 // MARK: - Camera & Face ID Controller
@@ -261,6 +347,33 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
 
     private var accumulatedEmbeddings: [[Float]] = []
     private let framesPerPose = 4
+
+    /// Último texto publicado en `userInstruction` y cuándo.
+    ///
+    /// El bucle de captura corre a ~30 Hz y `userInstruction` es @Published:
+    /// escribirlo en cada fotograma reconstruiría la pantalla de registro
+    /// treinta veces por segundo. Sólo se publica si el texto CAMBIA, y nunca
+    /// más de tres veces por segundo, para que los mensajes no parpadeen
+    /// cuando la cara oscila justo en el límite de dos diagnósticos.
+    private var lastPublishedInstruction = ""
+    private var lastInstructionPublish = Date.distantPast
+    private let instructionMinimumInterval: TimeInterval = 0.35
+
+    /// `registrationBlocker` no se frena: describe algo que el usuario no puede
+    /// arreglar (falta el modelo), así que se enseña y se deja puesto.
+    @Published var registrationBlocker: String?
+    /// Copia de `registrationBlocker` que sólo toca la cola de captura, para no
+    /// leer una @Published desde un hilo que no es el principal.
+    private var registrationBlockerMirror: String?
+
+    private func publishInstruction(_ text: String, immediate: Bool = false) {
+        guard text != lastPublishedInstruction else { return }
+        let now = Date()
+        guard immediate || now.timeIntervalSince(lastInstructionPublish) >= instructionMinimumInterval else { return }
+        lastPublishedInstruction = text
+        lastInstructionPublish = now
+        DispatchQueue.main.async { self.userInstruction = text }
+    }
 
     private let coreOrder: [FacePoseBucket] = [.center, .left, .right]
     private let extendedOrder: [FacePoseBucket] = [.up, .down, .tiltLeft, .tiltRight, .closer, .farther]
@@ -541,12 +654,16 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         frameCounter = 0
         sessionStartDate = Date()
         lastLogTime = 0
+        registrationBlockerMirror = nil
+        lastPublishedInstruction = FacePoseBucket.center.hint
+        lastInstructionPublish = Date.distantPast
 
         FaceIDModelManager.shared.prewarm()
 
         DispatchQueue.main.async {
             self.registrationProgress = 0.0
             self.holdProgress = 0.0
+            self.registrationBlocker = nil
             self.appState = .registering(.scanning)
             self.userInstruction = FacePoseBucket.center.hint
         }
@@ -697,7 +814,10 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
         if let pose = actualPose {
             let capturedCount = poseBucketSamples[pose]?.count ?? 0
             if capturedCount < targetCount(for: pose) {
-                guard AntiSpoofQualityGate.passes(observation: observation, pixelBuffer: pixelBuffer) else { return }
+                if let motivo = AntiSpoofQualityGate.rejection(observation: observation, pixelBuffer: pixelBuffer) {
+                    publishInstruction(motivo)
+                    return
+                }
 
                 let debugTag = FaceIDConfig.enableDebugImageCapture ? "enroll_f\(frameCounter)" : nil
                 // Antes: `if false && ...`, es decir, el registro aceptaba
@@ -718,12 +838,35 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
                     }
                 }
 
-                guard let embedding = FaceIDDataStore.shared.generateEnrollmentEmbedding(
+                let embedding: [Float]
+                switch FaceIDDataStore.shared.enrollmentEmbedding(
                     for: observation,
                     from: pixelBuffer,
                     tag: "enroll_\(pose.rawValue)_\(capturedCount)",
                     checkSharpness: true
-                ) else { return }
+                ) {
+                case .success(let value):
+                    embedding = value
+                    if registrationBlockerMirror != nil {
+                        registrationBlockerMirror = nil
+                        DispatchQueue.main.async { self.registrationBlocker = nil }
+                    }
+                case .failure(let motivo):
+                    if motivo.isFatal {
+                        // Sin modelo no hay registro posible. Se dice una vez y
+                        // se deja dicho, en vez de pedirle al usuario que siga
+                        // moviendo la cabeza contra una pared.
+                        let texto = motivo.hint
+                        if registrationBlockerMirror != texto {
+                            registrationBlockerMirror = texto
+                            DispatchQueue.main.async { self.registrationBlocker = texto }
+                        }
+                        publishInstruction(texto, immediate: true)
+                    } else {
+                        publishInstruction(motivo.hint)
+                    }
+                    return
+                }
 
                 accumulatedEmbeddings.append(embedding)
                 let currentPoseTotalNeeded = targetCount(for: pose) * framesPerPose
@@ -754,11 +897,7 @@ final class CameraController: NSObject, ObservableObject, Identifiable, AVCaptur
                 }
             }
         } else {
-            DispatchQueue.main.async {
-                if self.userInstruction != currentTarget.hint {
-                    self.userInstruction = currentTarget.hint
-                }
-            }
+            publishInstruction(currentTarget.correction(yaw: yaw, pitch: pitch, roll: roll, faceWidth: faceW))
             if !accumulatedEmbeddings.isEmpty {
                 accumulatedEmbeddings.removeLast()
                 let capturedCount = poseBucketSamples[currentTarget]?.count ?? 0
@@ -1028,27 +1167,47 @@ final class FaceIDDataStore {
         return FaceIDModelManager.shared.predictEmbeddingOnly(embeddingArray: fArr)
     }
 
-    func generateEnrollmentEmbedding(for observation: VNFaceObservation, from pixelBuffer: CVPixelBuffer, tag: String? = nil, checkSharpness: Bool = true) -> [Float]? {
-        guard let faceImg = FaceAligner.alignFace(pixelBuffer: pixelBuffer, observation: observation, size: 112) else { return nil }
+    /// Huella facial de un fotograma para el registro, o el motivo del fallo.
+    ///
+    /// Antes devolvía `[Float]?` y cada `return nil` dejaba el registro parado
+    /// sin un solo mensaje. El peor era el último: sin el modelo ArcFace en el
+    /// paquete, devolvía nil en TODOS los fotogramas y el registro no podía
+    /// terminar nunca, dijera lo que dijera la pantalla.
+    func enrollmentEmbedding(
+        for observation: VNFaceObservation,
+        from pixelBuffer: CVPixelBuffer,
+        tag: String? = nil,
+        checkSharpness: Bool = true
+    ) -> Result<[Float], EnrollmentEmbeddingFailure> {
+        guard let faceImg = FaceAligner.alignFace(pixelBuffer: pixelBuffer, observation: observation, size: 112) else {
+            return .failure(.alignmentFailed)
+        }
 
         bufferLock.lock()
         defer { bufferLock.unlock() }
 
         if faceArray == nil { faceArray = try? MLMultiArray(shape: [1, 3, 112, 112], dataType: .float32) }
         if faceArrayFlipped == nil { faceArrayFlipped = try? MLMultiArray(shape: [1, 3, 112, 112], dataType: .float32) }
-        guard let fArr = faceArray, let fArrFlipped = faceArrayFlipped else { return nil }
+        guard let fArr = faceArray, let fArrFlipped = faceArrayFlipped else {
+            return .failure(.internalError)
+        }
 
         if facePixels.count != 112 * 112 * 4 { facePixels = [UInt8](repeating: 0, count: 112 * 112 * 4) }
         ciContext.render(faceImg, toBitmap: &facePixels, rowBytes: 112 * 4, bounds: CGRect(x: 0, y: 0, width: 112, height: 112), format: .RGBA8, colorSpace: CGColorSpaceCreateDeviceRGB())
 
-        if checkSharpness && !FaceAligner.isBufferSharp(&facePixels, size: 112, blurThreshold: 5.5) { return nil }
+        if checkSharpness && !FaceAligner.isBufferSharp(&facePixels, size: 112, blurThreshold: 5.5) {
+            return .failure(.notSharp)
+        }
 
         FaceAligner.normalizeFaceExposure(pixels: &facePixels, size: 112)
         FaceAligner.applyCLAHE(pixels: &facePixels, size: 112)
         FaceAligner.fillInputArray(array: fArr, from: &facePixels, size: 112, flipped: false, normMode: .arcFace)
         FaceAligner.fillInputArray(array: fArrFlipped, from: &facePixels, size: 112, flipped: true, normMode: .arcFace)
 
-        return FaceIDModelManager.shared.predictEmbeddingTTA(original: fArr, flipped: fArrFlipped)
+        guard let embedding = FaceIDModelManager.shared.predictEmbeddingTTA(original: fArr, flipped: fArrFlipped) else {
+            return .failure(.modelUnavailable)
+        }
+        return .success(embedding)
     }
 
     static func averageEmbeddings(_ embeddings: [[Float]]) -> [Float] {

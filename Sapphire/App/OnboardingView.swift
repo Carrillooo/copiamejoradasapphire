@@ -161,36 +161,46 @@ private struct HelperInstallationStepView: View {
 
     @State private var didStartInstall = false
 
+    /// `true` si esta copia ni siquiera puede tener ayudante (firma ad-hoc).
+    private var helperUnavailable: Bool { !helperManager.isSupportedInThisBuild }
+
     private var helperReady: Bool {
-        helperManager.isRunning
+        // Cuando el ayudante no puede existir, el paso se da por terminado. Si
+        // no, el botón de continuar se queda en «Esperando al ayudante…» para
+        // siempre y la única salida es «Omitir», que parece renunciar a algo.
+        helperManager.isRunning || helperUnavailable
     }
 
     var body: some View {
         VStack(spacing: 0) {
-            Text("Install Helper Service")
+            Text(helperUnavailable ? "Ayudante del sistema" : "Instalar el ayudante")
                 .font(.system(size: 32, weight: .bold, design: .rounded))
                 .padding(.top, 40).padding(.bottom, 10)
 
-            Text("Iris needs a privileged helper for battery management and system integrations. macOS will ask you to allow it under Login Items → Background Activity.")
+            Text(helperUnavailable
+                 ? "Iris funciona sin él. Lo único que queda fuera es lo que exige permisos de administrador: límite de carga, ventiladores, sensores del SMC y el bloqueo de webs."
+                 : "Iris usa un ayudante con permisos para la gestión de batería y la integración con el sistema. macOS te pedirá autorizarlo en Elementos de Inicio → Actividad en segundo plano.")
                 .font(.body)
                 .multilineTextAlignment(.center)
                 .foregroundColor(.secondary)
                 .padding(.horizontal, 50)
                 .padding(.bottom, 8)
 
-            Text(stepGuidance)
-                .font(.subheadline)
-                .multilineTextAlignment(.center)
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 50)
-                .padding(.bottom, 24)
+            if !helperUnavailable {
+                Text(stepGuidance)
+                    .font(.subheadline)
+                    .multilineTextAlignment(.center)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 50)
+                    .padding(.bottom, 24)
+            }
 
             HelperStatusBanner(helperManager: helperManager)
                 .padding()
                 .roundedCard(fill: Color.black.opacity(0.15), cornerRadius: 20, stroke: Color.white.opacity(0.1))
                 .padding(.horizontal, 50)
 
-            if !helperReady {
+            if !helperReady && !helperUnavailable {
                 Button {
                     if helperManager.status == .requiresApproval {
                         SMAppService.openSystemSettingsLoginItems()
@@ -203,7 +213,7 @@ private struct HelperInstallationStepView: View {
                         helperManager.beginInstallation()
                     }
                 } label: {
-                    Text(helperManager.isResettingHelper ? "Resetting…" : primaryActionTitle)
+                    Text(helperManager.isResettingHelper ? "Reinstalando…" : primaryActionTitle)
                         .font(.headline)
                         .frame(maxWidth: 280)
                         .padding(.vertical, 12)
@@ -216,18 +226,21 @@ private struct HelperInstallationStepView: View {
 
             Spacer()
 
-            OnboardingButton(title: helperReady ? "Continue" : "Waiting for Helper…", action: onContinue)
+            OnboardingButton(title: helperReady ? "Continuar" : "Esperando al ayudante…", action: onContinue)
                 .disabled(!helperReady)
                 .animation(.easeInOut, value: helperManager.status)
                 .animation(.easeInOut, value: helperManager.isRunning)
 
-            Button(action: onContinue) {
-                Text("Skip for now").font(.subheadline).foregroundColor(.secondary)
+            if !helperUnavailable {
+                Button(action: onContinue) {
+                    Text("Omitir por ahora").font(.subheadline).foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 8)
             }
-            .buttonStyle(.plain)
-            .padding(.top, 8)
         }
         .onAppear {
+            guard !helperUnavailable else { return }
             helperManager.updateStatus()
             helperManager.checkIfRunning()
             if !didStartInstall {
@@ -245,26 +258,26 @@ private struct HelperInstallationStepView: View {
     private var primaryActionTitle: String {
         switch helperManager.status {
         case .requiresApproval:
-            return "Open Login Items"
+            return "Abrir Elementos de Inicio"
         case .enabled, .notFound:
-            return "Reset Helper"
+            return "Reinstalar ayudante"
         default:
-            return "Install Helper"
+            return "Instalar ayudante"
         }
     }
 
     private var stepGuidance: String {
         switch helperManager.status {
         case .requiresApproval:
-            return "System Settings should be open. Under Allow in the Background, turn on both Iris and Iris Helper, then return here."
+            return "Ajustes del Sistema debería estar abierto. En «Permitir en segundo plano», activa Iris y el Ayudante de Iris, y vuelve aquí."
         case .enabled where !helperManager.isRunning:
-            return "The helper is approved but not responding. Tap Reset Helper so Iris can unregister its own background items and reinstall the helper."
+            return "El ayudante está autorizado pero no responde. Pulsa «Reinstalar ayudante» para darlo de baja y volver a registrarlo."
         case .enabled:
-            return "Helper is ready. You can continue."
+            return "El ayudante está listo. Puedes continuar."
         case .notFound:
-            return "macOS lost the helper registration (SAP-H3). Tap Reset Helper to rebuild it; Iris relaunches itself if the helper stays stuck."
+            return "macOS ha perdido el registro del ayudante (SAP-H3). Pulsa «Reinstalar ayudante» para rehacerlo."
         default:
-            return "Tap Install Helper. Approve the macOS prompt, then enable Iris under System Settings → General → Login Items → Background Activity."
+            return "Pulsa «Instalar ayudante», acepta el aviso de macOS y luego activa Iris en Ajustes del Sistema → General → Elementos de Inicio."
         }
     }
 

@@ -145,7 +145,7 @@ struct FaceIDRegistrationView: View {
         return order.first { !cameraController.registrationPoseCaptured.contains($0.rawValue) }
     }
     private var registrationProgress: Double { cameraController.registrationProgress }
-    private var instructionText: String { isRegistered ? "Registration Complete!" : cameraController.userInstruction }
+    private var instructionText: String { isRegistered ? "¡Registro completado!" : cameraController.userInstruction }
 
     private var isAskExtended: Bool {
         if case .registering(let step) = cameraController.appState, step == .askExtended { return true }
@@ -168,7 +168,7 @@ struct FaceIDRegistrationView: View {
 
             VStack(spacing: 0) {
                 HStack {
-                    Text("Registering \(profileName)")
+                    Text("Registrando a \(profileName)")
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(.white.opacity(0.8))
                     Spacer()
@@ -194,6 +194,7 @@ struct FaceIDRegistrationView: View {
                     FaceIDPoseRing(
                         capturedPoses: cameraController.registrationPoseCaptured,
                         targetPose: nextPendingPose,
+                        holdProgress: displayedHoldProgress,
                         diameter: 300,
                         accent: overlayColor
                     )
@@ -213,7 +214,7 @@ struct FaceIDRegistrationView: View {
 
                         VStack {
                             Spacer()
-                            Text("Hold Still")
+                            Text("No te muevas")
                                 .font(.caption.bold())
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 14)
@@ -242,24 +243,24 @@ struct FaceIDRegistrationView: View {
                                 .font(.system(size: 42))
                                 .foregroundStyle(.blue)
 
-                            Text("Basic Setup Complete")
+                            Text("Registro básico completado")
                                 .font(.headline)
                                 .foregroundColor(.primary)
 
-                            Text("Capture more angles for better accuracy with glasses and varying lighting.")
+                            Text("Captura más ángulos para acertar mejor con gafas y con luz distinta.")
                                 .font(.caption)
                                 .multilineTextAlignment(.center)
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 10)
 
                             HStack(spacing: 12) {
-                                Button("Skip") {
+                                Button("Omitir") {
                                     cameraController.skipExtendedRegistration()
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.regular)
 
-                                Button("Continue") {
+                                Button("Continuar") {
                                     cameraController.acceptExtendedRegistration()
                                 }
                                 .buttonStyle(.borderedProminent)
@@ -290,29 +291,47 @@ struct FaceIDRegistrationView: View {
                         VStack(spacing: 16) {
                             if cameraController.isExtendedPhase {
                                 HStack(spacing: 10) {
-                                    poseIndicator(label: "Up", key: "up")
-                                    poseIndicator(label: "Down", key: "down")
-                                    poseIndicator(label: "Tilt L", key: "tiltLeft")
-                                    poseIndicator(label: "Tilt R", key: "tiltRight")
+                                    poseIndicator(label: "Arriba", key: "up")
+                                    poseIndicator(label: "Abajo", key: "down")
+                                    poseIndicator(label: "Inclin. izq.", key: "tiltLeft")
+                                    poseIndicator(label: "Inclin. der.", key: "tiltRight")
                                 }
                                 HStack(spacing: 10) {
-                                    poseIndicator(label: "Near", key: "closer")
-                                    poseIndicator(label: "Far", key: "farther")
+                                    poseIndicator(label: "Cerca", key: "closer")
+                                    poseIndicator(label: "Lejos", key: "farther")
                                 }
                             } else {
                                 HStack(spacing: 10) {
-                                    poseIndicator(label: "Front", key: "center")
-                                    poseIndicator(label: "Left", key: "left")
-                                    poseIndicator(label: "Right", key: "right")
+                                    poseIndicator(label: "De frente", key: "center")
+                                    poseIndicator(label: "Izquierda", key: "left")
+                                    poseIndicator(label: "Derecha", key: "right")
                                 }
                             }
 
-                            Text(instructionText)
-                                .font(.system(size: 18, weight: .semibold, design: .rounded))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
+                            if let bloqueo = cameraController.registrationBlocker {
+                                // Un impedimento que no se arregla moviendo la
+                                // cabeza no se enseña como una instrucción más:
+                                // si no, el usuario sigue intentándolo.
+                                VStack(spacing: 8) {
+                                    Label(bloqueo, systemImage: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(.orange)
+                                        .multilineTextAlignment(.center)
+
+                                    Text("El registro no puede continuar. Cierra esta ventana.")
+                                        .font(.caption)
+                                        .foregroundColor(.white.opacity(0.7))
+                                }
                                 .frame(height: 50)
                                 .transition(.opacity)
+                            } else {
+                                Text(instructionText)
+                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.center)
+                                    .frame(height: 50)
+                                    .transition(.opacity)
+                            }
                         }
                     }
                 }

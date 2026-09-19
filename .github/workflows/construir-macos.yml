@@ -96,6 +96,29 @@ jobs:
             $EXTRA \
             build 2>&1 | tee build.log
 
+      - name: Comprobar que el modelo facial va dentro de la app
+        # El paso de restauración es `continue-on-error`, y Xcode incluye los
+        # modelos por sincronización de carpeta: dos sitios por donde el modelo
+        # puede desaparecer sin que la compilación falle. Cuando eso pasa, la
+        # app se instala, el registro facial arranca, y NO TERMINA NUNCA, sin
+        # decir por qué. Vale más romper aquí que entregar eso.
+        run: |
+          APP="$(find build/Build/Products/Release -maxdepth 1 -name '*.app' | head -1)"
+          if [ -z "$APP" ]; then
+            echo "No se encuentra la .app compilada." >&2
+            exit 1
+          fi
+          echo "App: $APP"
+          echo "--- Modelos CoreML dentro del paquete ---"
+          find "$APP/Contents/Resources" -maxdepth 1 \( -name '*.mlmodelc' -o -name '*.mlpackage' \) -print || true
+          if find "$APP/Contents/Resources" -maxdepth 2 -name 'ArcFace*' | grep -q .; then
+            echo "✓ El modelo ArcFace viaja dentro de la app."
+          else
+            echo "✗ La app NO lleva el modelo ArcFace: el registro facial no podría completarse." >&2
+            echo "  Revisa el paso «Restaurar binarios opcionales de upstream»." >&2
+            exit 1
+          fi
+
       - name: Resumen de errores
         if: failure()
         run: |
